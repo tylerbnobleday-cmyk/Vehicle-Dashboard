@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, Battery, Thermometer, Wind, CheckCircle2, Wrench } from "lucide-react";
 import { format } from "date-fns";
+import foresterHero from "@/assets/forester-hero.png";
 
 export default function Dashboard() {
   const info = useVehicleStore(state => state.info);
@@ -41,14 +42,23 @@ export default function Dashboard() {
     <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto pb-32 animate-in fade-in duration-500">
       
       {/* Header */}
-      <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-primary drop-shadow-[0_0_15px_rgba(0,112,192,0.3)]">{info.name}</h1>
-          <p className="text-muted-foreground mt-1 text-lg">{info.odometer.toLocaleString()} km</p>
-        </div>
-        <div className="text-right">
-          <div className="text-5xl md:text-6xl font-mono font-bold tracking-tighter">{format(time, 'HH:mm')}</div>
-          <div className="text-xl text-muted-foreground uppercase tracking-widest">{format(time, 'EEEE, d MMM')}</div>
+      <div className="relative rounded-2xl overflow-hidden border border-border/30 bg-card/40">
+        <img
+          src={foresterHero}
+          alt="2010 Subaru Forester XS"
+          className="absolute inset-0 w-full h-full object-cover opacity-30"
+          draggable={false}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/60 to-background/20" />
+        <div className="relative flex justify-between items-end p-5">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-primary drop-shadow-[0_0_15px_rgba(0,112,192,0.4)]">{info.name}</h1>
+            <p className="text-muted-foreground mt-1 text-lg">{info.odometer.toLocaleString()} km</p>
+          </div>
+          <div className="text-right">
+            <div className="text-5xl md:text-6xl font-mono font-bold tracking-tighter">{format(time, 'HH:mm')}</div>
+            <div className="text-xl text-muted-foreground uppercase tracking-widest">{format(time, 'EEEE, d MMM')}</div>
+          </div>
         </div>
       </div>
 
