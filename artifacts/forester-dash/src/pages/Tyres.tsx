@@ -23,6 +23,15 @@ export default function Tyres() {
     return "text-red-500";
   };
 
+  const formatInstallDate = (installDate: string) => {
+    if (!installDate) return "date not set";
+
+    const date = new Date(installDate);
+    if (Number.isNaN(date.getTime())) return "date not set";
+
+    return format(date, "MMM yyyy");
+  };
+
   const handleSave = () => {
     if (editingTyre) {
       updateTyre(editingTyre.id, editingTyre);
@@ -89,7 +98,7 @@ export default function Tyres() {
                   </div>
                 </div>
                 <div className="text-sm text-muted-foreground flex items-center">
-                  <Check className="w-4 h-4 mr-2" /> Installed {format(new Date(tyre.installDate), 'MMM yyyy')}
+                  <Check className="w-4 h-4 mr-2" /> Installed {formatInstallDate(tyre.installDate)}
                 </div>
               </CardContent>
             </Card>
