@@ -191,14 +191,114 @@ const defaultRepairs: RepairRecord[] = [
 
 const defaultServices: ServiceRecord[] = [
   {
-    id: 's1', type: 'Oil Filter Replacement', provider: 'JAX Tyres',
-    date: new Date('2026-06-02').toISOString(), odometer: 163000,
-    status: 'OK', notes: 'Check engine light remained on after work completed.'
+    id: 's-delivery', type: 'New Vehicle Delivery', provider: 'Autonexus Altona',
+    date: new Date('2010-11-04').toISOString(), odometer: 0,
+    status: 'OK', notes: 'Delivery completed. New vehicle from dealer.'
   },
   {
-    id: 's2', type: '162,000 km Service', provider: '',
-    date: new Date('2026-01-01').toISOString(), odometer: 162000,
-    status: 'OVERDUE', notes: 'Full service overdue. Oil filter done at JAX 2 Jun. Remaining items still needed.'
+    id: 's01', type: '12,500 km / 6 Month Service', provider: 'Subaru Mentone',
+    date: new Date('2011-06-05').toISOString(), odometer: 7076,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's02', type: '25,000 km / 12 Month Service', provider: 'Subaru Mentone',
+    date: new Date('2011-12-23').toISOString(), odometer: 16258,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's03', type: '37,500 km / 18 Month Service', provider: 'Subaru Mentone',
+    date: new Date('2012-07-05').toISOString(), odometer: 23502,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's04', type: '50,000 km / 24 Month Service', provider: 'Subaru Mentone',
+    date: new Date('2013-01-10').toISOString(), odometer: 30039,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's05', type: '62,500 km / 30 Month Service', provider: 'Subaru Mentone',
+    date: new Date('2013-06-28').toISOString(), odometer: 35781,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's06', type: '75,000 km / 36 Month Service', provider: 'Subaru Mentone',
+    date: new Date('2014-04-07').toISOString(), odometer: 45238,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's07', type: '87,500 km Service', provider: 'Subaru Mentone',
+    date: new Date('2015-01-14').toISOString(), odometer: 55633,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's08', type: '100,000 km Service', provider: 'Competition Tyres & More',
+    date: new Date('2015-10-14').toISOString(), odometer: 64245,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's09', type: '112,500 km Service', provider: 'Subaru Mentone',
+    date: new Date('2016-06-28').toISOString(), odometer: 71923,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's10', type: '125,000 km Service', provider: 'Carnegie Automotive',
+    date: new Date('2017-01-13').toISOString(), odometer: 77789,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's11', type: 'Service Completed', provider: '',
+    date: new Date('2017-07-11').toISOString(), odometer: 83054,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's12', type: '137,500 km Service', provider: 'Competition Tyres & More',
+    date: new Date('2018-03-09').toISOString(), odometer: 89842,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's13', type: '150,000 km Service', provider: 'Ultra Tune McKinnon',
+    date: new Date('2018-09-27').toISOString(), odometer: 94289,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's14', type: '162,500 km Service', provider: 'Ultra Tune McKinnon',
+    date: new Date('2019-12-11').toISOString(), odometer: 104116,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's15', type: 'Service Completed', provider: 'Ultra Tune McKinnon',
+    date: new Date('2021-07-28').toISOString(), odometer: 118432,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's16', type: 'Service Completed', provider: 'Ultra Tune McKinnon',
+    date: new Date('2021-11-14').toISOString(), odometer: 123001,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's17', type: '175,000 km Service', provider: 'Ultra Tune McKinnon',
+    date: new Date('2023-04-12').toISOString(), odometer: 130710,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's18', type: 'Service Completed', provider: 'Ultra Tune McKinnon',
+    date: new Date('2024-09-23').toISOString(), odometer: 143073,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's19', type: '187,500 km Service', provider: 'Ultra Tune McKinnon',
+    date: new Date('2025-07-10').toISOString(), odometer: 150376,
+    status: 'OK', notes: ''
+  },
+  {
+    id: 's20', type: '200,000 km Service (Scheduled)', provider: 'Strathmore Car Care',
+    date: new Date('2026-06-01').toISOString(), odometer: 162000,
+    status: 'OVERDUE', notes: 'Scheduled 200,000 km service entry. Full service still required.'
+  },
+  {
+    id: 's21', type: 'Oil Filter Replacement', provider: 'JAX Tyres',
+    date: new Date('2026-06-02').toISOString(), odometer: 162000,
+    status: 'OK', notes: 'Check engine light remained on after work completed.'
   },
 ];
 
@@ -285,7 +385,7 @@ export const useVehicleStore = create<VehicleState>()(
       })
     }),
     {
-      name: 'vehicle-storage-v2',
+      name: 'vehicle-storage-v3',
       partialize: (state) => ({
         info: state.info,
         services: state.services,

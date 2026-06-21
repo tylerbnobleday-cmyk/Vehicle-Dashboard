@@ -1,0 +1,163 @@
+SERVICE HISTORY DATABASE
+
+Store all service history records and display them on:
+
+- Timeline view
+- Service book view
+- Vehicle history page
+- Maintenance graph
+- Odometer history graph
+
+Delivery
+
+04/11/2010
+Delivery completed
+Dealer: Autonexus Altona
+Odometer: New Vehicle
+
+Service History
+
+05/06/2011
+7,076 km
+Subaru Mentone
+12,500 km / 6 month service
+
+23/12/2011
+16,258 km
+Subaru Mentone
+25,000 km / 12 month service
+
+05/07/2012
+23,502 km
+Subaru Mentone
+37,500 km / 18 month service
+
+10/01/2013
+30,039 km
+Subaru Mentone
+50,000 km / 24 month service
+
+28/06/2013
+35,781 km
+Subaru Mentone
+62,500 km / 30 month service
+
+07/04/2014
+45,238 km
+Subaru Mentone
+75,000 km / 36 month service
+
+14/01/2015
+55,633 km
+Subaru Mentone
+87,500 km service
+
+14/10/2015
+64,245 km
+Competition Tyres & More
+100,000 km service
+
+28/06/2016
+71,923 km
+Subaru Mentone
+112,500 km service
+
+13/01/2017
+77,789 km
+Carnegie Automotive
+125,000 km service
+
+11/07/2017
+83,054 km
+Service completed
+
+09/03/2018
+89,842 km
+Competition Tyres & More
+137,500 km service
+
+27/09/2018
+94,289 km
+Ultra Tune McKinnon
+150,000 km service
+
+11/12/2019
+104,116 km
+Ultra Tune McKinnon
+162,500 km service
+
+28/07/2021
+118,432 km
+Ultra Tune McKinnon
+Service completed
+
+14/11/2021
+123,001 km
+Ultra Tune McKinnon
+Service completed
+
+12/04/2023
+130,710 km
+Ultra Tune McKinnon
+175,000 km service
+
+23/09/2024
+143,073 km
+Ultra Tune McKinnon
+Service completed
+
+10/07/2025
+150,376 km
+Ultra Tune McKinnon
+187,500 km service
+
+01/06/2026
+162,000 km
+Strathmore Car Care
+200,000 km scheduled service entry
+
+02/06/2026
+162,000 km
+JAX Tyres
+Oil filter replacement
+Check engine light remained on
+
+Current Odometer
+
+163,000 km
+
+Vehicle Statistics
+
+Original delivery date:
+04 November 2010
+
+Current age:
+Automatically calculate
+
+Total distance travelled:
+163,000 km
+
+Average kilometres per year:
+Automatically calculate
+
+Display service history as:
+
+- Timeline
+- Cards
+- Table
+- Interactive graph
+
+Generate charts showing:
+
+- Kilometres over time
+- Service frequency
+- Cost tracking
+- Vehicle health trend
+
+Vehicle History Score
+
+Excellent service history from new.
+Display badge:
+"Service Records Available From Delivery"
+
+Allow photos and scanned service records to be attached to each service entry.
