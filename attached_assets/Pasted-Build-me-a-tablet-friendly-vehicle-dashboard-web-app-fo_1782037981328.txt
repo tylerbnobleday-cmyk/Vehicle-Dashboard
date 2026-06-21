@@ -1,0 +1,334 @@
+Build me a tablet-friendly vehicle dashboard web app for my 2010 Subaru Forester XS.
+
+The app will run on a Samsung tablet mounted in the car and act as a complete vehicle information, maintenance, camping, and future vehicle control hub.
+
+GENERAL REQUIREMENTS
+
+- React
+- Tailwind CSS
+- Dark mode by default
+- Subaru-inspired blue accent colours
+- Mobile and tablet first design
+- Offline capable
+- Local storage for all data
+- Import/export backup system using JSON
+- Large buttons and text suitable for use in a vehicle
+- Modern dashboard appearance
+- Fast loading
+- Easy to expand in the future
+
+MAIN DASHBOARD
+
+Display:
+
+- Vehicle name
+- Vehicle photo
+- Odometer
+- Service status
+- Rego status
+- Tyre status
+- Battery voltage
+- Vehicle warnings
+- Repair progress
+- Quick notes
+- Weather card placeholder
+- Time and date
+- Upcoming reminders
+
+Use large cards and indicators that can be read at a glance.
+
+VEHICLE PAGE
+
+Create a visual Subaru Forester style top-down vehicle diagram.
+
+The diagram should visually indicate:
+
+- Driver door
+- Passenger door
+- Rear left door
+- Rear right door
+- Boot
+- Bonnet
+
+When a door or panel is open it should highlight red.
+
+Show:
+
+- Door status
+- Boot status
+- Bonnet status
+- Handbrake status
+- Headlight status
+- Parking light status
+- Interior light status
+- Reverse status
+- Speed
+- Battery voltage
+- Cabin temperature
+- Outside temperature
+
+Use demo data for now.
+
+ODOMETER AND SERVICE HISTORY
+
+Allow:
+
+- Manual odometer entry
+- Service history records
+- Date tracking
+- Cost tracking
+- Notes
+
+Track:
+
+- Oil changes
+- Oil filter
+- Air filter
+- Cabin filter
+- Spark plugs
+- Tyres
+- Brakes
+- Battery
+- Wipers
+- Coolant
+- Transmission service
+- Custom services
+
+Show:
+
+- Next service due
+- Service overdue
+- Due soon
+- Completed
+
+Default vehicle mileage:
+
+163000 km
+
+Default service reminder:
+
+162000 km service overdue
+
+TYRE MANAGEMENT
+
+Track:
+
+- Front left tyre
+- Front right tyre
+- Rear left tyre
+- Rear right tyre
+- Spare tyre
+
+Store:
+
+- Brand
+- Model
+- Pressure
+- Condition
+- Install date
+- Notes
+
+Show tyre health cards.
+
+REPAIRS AND PROJECTS
+
+Create a repair tracker.
+
+Status options:
+
+- Not started
+- Waiting for parts
+- In progress
+- Booked
+- Completed
+
+Priority options:
+
+- Critical
+- High
+- Medium
+- Low
+
+Preload:
+
+- 162000 km service overdue
+- Front left bumper repair
+- Fog light repair
+- Rear cargo trim repair
+- Rear wiper repair
+- Tyre replacement/check
+- Check engine light investigation
+
+CAMPING PAGE
+
+Create a camping setup manager.
+
+Include:
+
+- Camping checklist
+- Gear inventory
+- Boot organisation notes
+- LED lighting notes
+- Power setup notes
+- Camp trip planner
+
+Allow custom checklists.
+
+LED LIGHTING PAGE
+
+Create an interior lighting management page.
+
+Display:
+
+- Controller 1 status
+- Controller 2 status
+- Active lighting zones
+- Brightness
+- Colour
+
+Use simulated data.
+
+MEDIA PAGE
+
+Display:
+
+- Current track placeholder
+- Play
+- Pause
+- Next
+- Previous
+
+Prepare architecture for future Bluetooth media integration.
+
+DIGITAL SPEEDOMETER PAGE
+
+Create a full-screen digital dashboard.
+
+Show:
+
+- Large speed display
+- Battery voltage
+- Time
+- Temperature
+- Vehicle warnings
+
+Inspired by classic digital dashboards and retro vehicle displays.
+
+REMINDERS PAGE
+
+Track:
+
+- Rego
+- Insurance
+- Service
+- Tyres
+- Oil changes
+- Camping trips
+- Custom reminders
+
+Allow recurring reminders.
+
+VEHICLE DATA SYSTEM
+
+Create a central vehicle data system.
+
+For now use simulated data and manual toggles.
+
+Future hardware integration should support:
+
+- ESP32
+- Arduino
+- Raspberry Pi
+- OBD adapters
+- Bluetooth
+- Bluetooth Low Energy (BLE)
+- WiFi
+- MQTT
+- USB Serial
+
+Create a Vehicle API service layer.
+
+Example incoming JSON:
+
+{
+  "speed": 60,
+  "batteryVoltage": 13.8,
+  "driverDoor": true,
+  "passengerDoor": false,
+  "rearLeftDoor": false,
+  "rearRightDoor": false,
+  "boot": true,
+  "bonnet": false,
+  "handbrake": true,
+  "headlights": true,
+  "interiorLights": false,
+  "cabinTemp": 21,
+  "outsideTemp": 16
+}
+
+The dashboard should automatically update when data is received.
+
+DIAGNOSTICS PAGE
+
+Show:
+
+- Connection status
+- Last update received
+- Device name
+- Signal strength
+- Connected hardware
+- Sensor status
+- System logs
+
+SETTINGS PAGE
+
+Allow:
+
+- Vehicle information editing
+- Theme settings
+- Data backup
+- Data restore
+- Notification settings
+- Hardware settings
+
+ALERT SYSTEM
+
+Support warning alerts for:
+
+- Door open while driving
+- Boot open while driving
+- Bonnet open while driving
+- Lights left on
+- Low battery voltage
+- Service overdue
+- High temperature
+- Tyre pressure warning
+
+Create both visual and audio alert systems.
+
+BOTTOM NAVIGATION
+
+- Dashboard
+- Vehicle
+- Speedometer
+- Service
+- Tyres
+- Repairs
+- Camping
+- Lighting
+- Diagnostics
+- Settings
+
+DESIGN GOALS
+
+Make the app feel like a professional in-car command centre.
+
+It should look like something between:
+- Subaru vehicle information display
+- Tesla vehicle status screen
+- Overlanding dashboard
+- Camping command centre
+
+Focus on usability, large touch controls, smooth animations, and a premium modern appearance.
+
+Generate the complete project with organised components, reusable code structure, sample data, and a clean architecture that supports future integration with ESP32 hardware installed in the vehicle.
