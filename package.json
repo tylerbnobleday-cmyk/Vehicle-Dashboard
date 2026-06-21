@@ -2,6 +2,7 @@
   "name": "workspace",
   "version": "0.0.0",
   "license": "MIT",
+  "packageManager": "pnpm@11.8.0",
   "scripts": {
     "dev": "pnpm --filter @workspace/forester-dash dev",
     "dev:mockup": "pnpm --filter @workspace/mockup-sandbox dev",
