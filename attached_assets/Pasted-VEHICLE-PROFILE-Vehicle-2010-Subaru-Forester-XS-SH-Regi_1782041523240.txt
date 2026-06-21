@@ -1,0 +1,281 @@
+VEHICLE PROFILE
+
+Vehicle:
+
+2010 Subaru Forester XS (SH)
+
+Registration:
+
+1MB1KE
+
+Engine:
+
+2.5L Petrol
+
+Current Odometer:
+
+163000 km
+
+Vehicle Nickname:
+
+Steamy
+
+CURRENT VEHICLE STATUS
+
+Service Status:
+
+OVERDUE
+
+Last Service Target:
+
+162000 km
+
+Current Odometer:
+
+163000 km
+
+Service Priority:
+
+High
+
+KNOWN ISSUES
+
+Critical
+
+1. Rear Left Tyre
+
+Status: Replace Immediately
+
+Condition: Bald
+
+Notes: Tread worn out and steel belts/wires visible.
+
+2. Rear Right Tyre
+
+Status: Replace Immediately
+
+Condition: Bald
+
+Notes: Tread worn out and steel belts/wires visible.
+
+High Priority
+
+3. Front Left Tyre
+
+Status: Inspect and likely replace
+
+Notes: Condition requires assessment.
+
+4. Check Engine Light
+
+Status: Active
+
+Notes: Cause unknown.
+
+5. Rear Wiper
+
+Status: Not Working
+
+Notes: New arm installed but system still requires diagnosis.
+
+Medium Priority
+
+6. Front Left Bumper
+
+Status: Damaged
+
+Notes: Previous crack and temporary repairs completed.
+
+7. Left Fog Light
+
+Status: Broken
+
+Notes: Housing and bulb damaged.
+
+8. Rear Cargo Trim
+
+Status: Loose
+
+Notes: Has fallen down previously and requires clip repair.
+
+SERVICE HISTORY
+
+02 June 2026
+
+JAX Tyres
+
+Oil Filter Replacement
+
+Notes:
+
+Check engine light remained after work completed.
+
+TYRE DATA
+
+Front Left
+
+Status: Needs Inspection
+
+Pressure: Unknown
+
+Front Right
+
+Status: Serviceable
+
+Pressure: Unknown
+
+Rear Left
+
+Status: Dangerous
+
+Replace Immediately
+
+Rear Right
+
+Status: Dangerous
+
+Replace Immediately
+
+Spare
+
+Status: Available
+
+INSURANCE DETAILS
+
+Provider:
+
+RACV
+
+Policy Type:
+
+Third Party Fire and Theft
+
+Policy Number:
+
+MOT 815 262 759
+
+Policy Period:
+
+21 May 2026 to 21 May 2027
+
+Vehicle Insured:
+
+2010 Subaru Forester MY10 X Wagon
+
+Registration:
+
+1MB1KE
+
+Market Value Cover:
+
+Up to $10,000
+
+Annual Premium:
+
+$2,078.56
+
+Basic Excess:
+
+$900
+
+Additional Young Driver Excess:
+
+$400
+
+Liability Cover:
+
+$20,000,000
+
+Uninsured Motorist Cover:
+
+Up to $5,000
+
+Hire Car Benefit:
+
+Up to $60 per day for up to 21 days following theft
+
+Vehicle Finance:
+
+None
+
+Insurance Status:
+
+Active
+
+INSURANCE NOTES
+
+This policy is Third Party Fire and Theft only.
+
+It DOES NOT cover damage to my own vehicle if I crash.
+
+It DOES cover:
+
+- Damage I cause to other vehicles and property
+
+- Fire damage
+
+- Theft
+
+- Attempted theft
+
+- Uninsured driver damage (up to policy limits)
+
+Display a warning card reminding me that I do not have comprehensive insurance cover.
+
+REGO
+
+Registration:
+
+1MB1KE
+
+State:
+
+Victoria
+
+CUSTOM DASHBOARD CARDS
+
+- Service Status
+
+- Vehicle Health Score
+
+- Insurance Summary
+
+- Tyre Health
+
+- Active Repairs
+
+- Camping Setup
+
+- Battery Voltage
+
+- Door Status
+
+- Vehicle Warnings
+
+- Rego Reminder
+
+VEHICLE HEALTH RULES
+
+Score starts at 100.
+
+Subtract:
+
+- 25 points for each dangerous tyre
+
+- 15 points for overdue service
+
+- 10 points for check engine light
+
+- 5 points per unresolved repair
+
+Display overall vehicle condition as:
+
+Excellent
+
+Good
+
+Fair
+
+Needs Attention
+
+Unsaf

@@ -91,8 +91,8 @@ export default function Settings() {
               <Input value={localInfo.registration} onChange={e => setLocalInfo({...localInfo, registration: e.target.value})} className="h-12 text-lg font-mono uppercase" />
             </div>
             <div className="space-y-2">
-              <Label>Insurance Policy</Label>
-              <Input value={localInfo.insurance} onChange={e => setLocalInfo({...localInfo, insurance: e.target.value})} className="h-12 text-lg" />
+              <Label>Insurance Provider</Label>
+              <Input value={localInfo.insuranceProvider ?? ''} onChange={e => setLocalInfo({...localInfo, insuranceProvider: e.target.value})} className="h-12 text-lg" />
             </div>
           </div>
           <Button onClick={handleSaveInfo} size="lg" className="h-14 px-8 text-lg w-full md:w-auto mt-4">
