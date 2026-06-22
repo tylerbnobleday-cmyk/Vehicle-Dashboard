@@ -9,7 +9,18 @@ export interface VehicleInfo {
   make: string;
   model: string;
   engine: string;
+  engineNumber: string;
+  vin: string;
+  colour: string;
+  tare: number;
   registration: string;
+  registrationExpiry: string;
+  acquisitionDate: string;
+  transferId: string;
+  marketValue: number;
+  roadworthyCertificate: string;
+  roadworthyDate: string;
+  roadworthyOdometer: number;
   insuranceProvider: string;
   insurancePolicyNumber: string;
   insurancePeriod: string;
@@ -109,12 +120,23 @@ const defaultInfo: VehicleInfo = {
   make: 'Subaru',
   model: 'Forester XS (SH)',
   engine: '2.5L Petrol',
+  engineNumber: 'E300652',
+  vin: 'JF2SH9KL5AG056073',
+  colour: 'Blue',
+  tare: 1490,
   registration: '1MB1KE',
+  registrationExpiry: '11 Nov 2026',
+  acquisitionDate: '20 May 2026',
+  transferId: '85380996 6',
+  marketValue: 3000,
+  roadworthyCertificate: 'N993847',
+  roadworthyDate: '20 May 2026',
+  roadworthyOdometer: 157981,
   insuranceProvider: 'RACV',
   insurancePolicyNumber: 'MOT 815 262 759',
   insurancePeriod: '21 May 2026 – 21 May 2027',
   insuranceType: 'Third Party Fire & Theft',
-  odometer: 163000,
+  odometer: 163275,
   photoUrl: '',
 };
 
@@ -292,15 +314,20 @@ const defaultServices: ServiceRecord[] = [
   },
   {
     id: 's21', type: 'Oil Filter Replacement', provider: 'JAX Tyres',
-    date: new Date('2026-06-02').toISOString(), odometer: 162000,
-    status: 'OK', notes: 'Check engine light remained on after work completed.'
+    date: new Date('2026-06-02T15:58:00').toISOString(), odometer: 160424,
+    status: 'OK', notes: 'JAX Tyres & Auto Caulfield invoice 77151 / work order 060996. Replaced oil pressure switch. Paid $135.00. Check engine light remained on after work completed.'
+  },
+  {
+    id: 's22', type: 'Roadworthy Certificate', provider: 'Prestige Auto Clinic',
+    date: new Date('2026-05-20T14:23:00').toISOString(), odometer: 157981,
+    status: 'OK', notes: 'Certificate N993847. Second examination result: Pass. Used for registration transfer.'
   },
 ];
 
 const defaultReminders: ReminderRecord[] = [
   {
     id: 'rm1', title: 'Vehicle Registration', type: 'Rego',
-    dueDate: '', notes: 'Vic — 1MB1KE', recurring: true, status: 'Upcoming'
+    dueDate: new Date('2026-11-11').toISOString(), notes: 'Vic reg 1MB1KE expires 11 Nov 2026.', recurring: true, status: 'Upcoming'
   },
   {
     id: 'rm2', title: 'RACV Insurance Renewal', type: 'Insurance',
@@ -384,7 +411,7 @@ export const useVehicleStore = create<VehicleState>()(
       })
     }),
     {
-      name: 'vehicle-storage-v6',
+      name: 'vehicle-storage-v7',
       partialize: (state) => ({
         info: state.info,
         services: state.services,

@@ -91,6 +91,26 @@ export default function Settings() {
               <Input value={localInfo.registration} onChange={e => setLocalInfo({...localInfo, registration: e.target.value})} className="h-12 text-lg font-mono uppercase" />
             </div>
             <div className="space-y-2">
+              <Label>Registration Expiry</Label>
+              <Input value={localInfo.registrationExpiry} onChange={e => setLocalInfo({...localInfo, registrationExpiry: e.target.value})} className="h-12 text-lg" />
+            </div>
+            <div className="space-y-2">
+              <Label>VIN</Label>
+              <Input value={localInfo.vin} onChange={e => setLocalInfo({...localInfo, vin: e.target.value})} className="h-12 text-lg font-mono uppercase" />
+            </div>
+            <div className="space-y-2">
+              <Label>Engine Number</Label>
+              <Input value={localInfo.engineNumber} onChange={e => setLocalInfo({...localInfo, engineNumber: e.target.value})} className="h-12 text-lg font-mono uppercase" />
+            </div>
+            <div className="space-y-2">
+              <Label>Colour</Label>
+              <Input value={localInfo.colour} onChange={e => setLocalInfo({...localInfo, colour: e.target.value})} className="h-12 text-lg" />
+            </div>
+            <div className="space-y-2">
+              <Label>Roadworthy Certificate</Label>
+              <Input value={localInfo.roadworthyCertificate} onChange={e => setLocalInfo({...localInfo, roadworthyCertificate: e.target.value})} className="h-12 text-lg font-mono uppercase" />
+            </div>
+            <div className="space-y-2">
               <Label>Insurance Provider</Label>
               <Input value={localInfo.insuranceProvider ?? ''} onChange={e => setLocalInfo({...localInfo, insuranceProvider: e.target.value})} className="h-12 text-lg" />
             </div>

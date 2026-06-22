@@ -284,14 +284,22 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Insurance Summary */}
+        {/* Registration and Insurance Summary */}
         <Card className="border-border/50 bg-card/40 backdrop-blur">
           <CardHeader className="pb-2 border-b border-border/20">
             <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" /> Insurance
+              <ShieldCheck className="w-4 h-4" /> Rego & Insurance
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-3 space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Rego Expiry</span>
+              <span className="text-sm font-bold">{info.registrationExpiry}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Roadworthy</span>
+              <span className="text-sm font-bold text-green-400">{info.roadworthyCertificate}</span>
+            </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Provider</span>
               <span className="text-sm font-bold">{info.insuranceProvider}</span>
