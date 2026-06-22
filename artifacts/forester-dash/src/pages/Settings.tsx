@@ -7,6 +7,7 @@ import { Save, Download, Upload, AlertTriangle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { VehicleApi } from "@/services/vehicleApi";
 
 export default function Settings() {
   const info = useVehicleStore(state => state.info);
@@ -14,6 +15,9 @@ export default function Settings() {
   const resetData = useVehicleStore(state => state.resetData);
   
   const [localInfo, setLocalInfo] = useState(info);
+  const [isTrustedLocationDevice, setIsTrustedLocationDevice] = useState(
+    VehicleApi.isTrustedLocationDevice()
+  );
 
   const handleSaveInfo = () => {
     updateInfo(localInfo);
@@ -58,6 +62,17 @@ export default function Settings() {
       resetData();
       toast({ title: 'Factory reset complete.' });
     }
+  };
+
+  const handleTrustedLocationDevice = (trusted: boolean) => {
+    VehicleApi.setTrustedLocationDevice(trusted);
+    setIsTrustedLocationDevice(trusted);
+    toast({
+      title: trusted ? "This device is now the car tablet." : "Location disabled on this device.",
+      description: trusted
+        ? "Only this browser will request vehicle location until you trust another device."
+        : "This browser will not request or report location.",
+    });
   };
 
   return (
@@ -118,6 +133,40 @@ export default function Settings() {
           <Button onClick={handleSaveInfo} size="lg" className="h-14 px-8 text-lg w-full md:w-auto mt-4">
             <Save className="w-5 h-5 mr-2" /> Save Details
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-card/40 border-border/50">
+        <CardHeader>
+          <CardTitle className="uppercase tracking-widest text-lg text-primary">Trusted Car Tablet</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 rounded-lg border border-border/50 bg-background/40 p-4">
+            <div>
+              <p className="font-bold uppercase tracking-wider">
+                {isTrustedLocationDevice ? "Location enabled on this device" : "Location blocked on this device"}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Mark only the tablet that stays in the car. Other devices will not request location or weather.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant={isTrustedLocationDevice ? "default" : "outline"}
+                onClick={() => handleTrustedLocationDevice(true)}
+                className="h-11"
+              >
+                Trust This Device
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleTrustedLocationDevice(false)}
+                className="h-11"
+              >
+                Disable
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

@@ -79,7 +79,8 @@ export default function Dashboard() {
     sensorData.locationStatus === 'available' && sensorData.latitude !== null && sensorData.longitude !== null ? `${sensorData.latitude.toFixed(4)}, ${sensorData.longitude.toFixed(4)}`
       : sensorData.locationStatus === 'denied' ? 'Permission denied'
         : sensorData.locationStatus === 'requesting' ? 'Requesting...'
-          : 'No location';
+          : sensorData.locationStatus === 'disabled' ? 'Not car tablet'
+            : 'No location';
 
   return (
     <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto pb-32 animate-in fade-in duration-500">

@@ -15,7 +15,7 @@ export interface SensorData {
   latitude: number | null;
   longitude: number | null;
   locationAccuracy: number | null;
-  locationStatus: "idle" | "requesting" | "available" | "denied" | "unavailable";
+  locationStatus: "disabled" | "idle" | "requesting" | "available" | "denied" | "unavailable";
   engineRunning: boolean;
   timestamp: number;
 }
@@ -37,7 +37,7 @@ export const defaultSensorData: SensorData = {
   latitude: null,
   longitude: null,
   locationAccuracy: null,
-  locationStatus: "idle",
+  locationStatus: "disabled",
   engineRunning: false,
   timestamp: Date.now()
 };
@@ -51,6 +51,30 @@ const listeners = new Set<Listener>();
 let currentData = { ...defaultSensorData };
 
 const notify = () => listeners.forEach(listener => listener(currentData));
+const TRUSTED_DEVICE_KEY = "forester-dash-trusted-location-device";
+
+const isTrustedLocationDevice = () =>
+  typeof window !== "undefined" && localStorage.getItem(TRUSTED_DEVICE_KEY) === "true";
+
+function clearLocationData(status: SensorData["locationStatus"] = "disabled") {
+  currentData = {
+    ...currentData,
+    outsideTemp: null,
+    latitude: null,
+    longitude: null,
+    locationAccuracy: null,
+    locationStatus: status,
+    timestamp: Date.now(),
+  };
+  notify();
+}
+
+function stopLocationWatch() {
+  if (locationWatchId !== null) {
+    navigator.geolocation.clearWatch(locationWatchId);
+    locationWatchId = null;
+  }
+}
 
 async function updateWeather(latitude: number, longitude: number) {
   const now = Date.now();
@@ -86,6 +110,11 @@ export const VehicleApi = {
       
       notify();
     }, 3000);
+
+    if (!isTrustedLocationDevice()) {
+      clearLocationData("disabled");
+      return;
+    }
 
     if (!("geolocation" in navigator)) {
       currentData = { ...currentData, locationStatus: "unavailable", timestamp: Date.now() };
@@ -131,10 +160,7 @@ export const VehicleApi = {
       clearInterval(simulationInterval);
       simulationInterval = null;
     }
-    if (locationWatchId !== null) {
-      navigator.geolocation.clearWatch(locationWatchId);
-      locationWatchId = null;
-    }
+    stopLocationWatch();
   },
   
   subscribe: (listener: Listener) => {
@@ -147,5 +173,19 @@ export const VehicleApi = {
   updateData: (data: Partial<SensorData>) => {
     currentData = { ...currentData, ...data, timestamp: Date.now() };
     notify();
+  },
+
+  isTrustedLocationDevice,
+
+  setTrustedLocationDevice: (trusted: boolean) => {
+    if (trusted) {
+      localStorage.setItem(TRUSTED_DEVICE_KEY, "true");
+      VehicleApi.stopSimulation();
+      VehicleApi.startSimulation();
+    } else {
+      localStorage.removeItem(TRUSTED_DEVICE_KEY);
+      stopLocationWatch();
+      clearLocationData("disabled");
+    }
   }
 };
