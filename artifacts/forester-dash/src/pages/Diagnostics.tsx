@@ -11,8 +11,9 @@ export default function Diagnostics() {
   const sensors = [
     { name: 'Vehicle Speed', value: `${sensorData.speed} km/h`, status: 'Simulated' },
     { name: 'Outside Temp', value: sensorData.outsideTemp === null ? '--' : `${sensorData.outsideTemp.toFixed(1)} C`, status: 'Weather' },
-    { name: 'Location', value: sensorData.latitude === null || sensorData.longitude === null ? sensorData.locationStatus : `${sensorData.latitude.toFixed(4)}, ${sensorData.longitude.toFixed(4)}`, status: 'Browser' },
-    { name: 'Driver Door', value: sensorData.driverDoor ? 'OPEN' : 'CLOSED', status: 'Simulated' },
+    { name: sensorData.locationStatus === 'cached' ? 'Last Tablet Location' : 'Location', value: sensorData.latitude === null || sensorData.longitude === null ? sensorData.locationStatus : `${sensorData.latitude.toFixed(4)}, ${sensorData.longitude.toFixed(4)}`, status: sensorData.locationStatus === 'cached' ? 'Cached' : 'Browser' },
+    { name: 'Driver Door (RH)', value: sensorData.driverDoor ? 'OPEN' : 'CLOSED', status: 'Simulated' },
+    { name: 'Passenger Door (LH)', value: sensorData.passengerDoor ? 'OPEN' : 'CLOSED', status: 'Simulated' },
     { name: 'Boot', value: sensorData.boot ? 'OPEN' : 'CLOSED', status: 'Simulated' },
   ];
 

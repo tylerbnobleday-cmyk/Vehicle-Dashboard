@@ -25,7 +25,7 @@ export default function Speedometer() {
       <div className="flex justify-between items-center px-8 py-4 border-b border-border/30">
         <div className="flex gap-8 text-xl font-mono text-muted-foreground font-semibold">
           <span>OUT: {sensorData.outsideTemp === null ? '--' : sensorData.outsideTemp.toFixed(1)} C</span>
-          <span>LOC: {sensorData.locationStatus === 'available' ? 'ON' : sensorData.locationStatus.toUpperCase()}</span>
+          <span>LOC: {sensorData.locationStatus === 'available' ? 'ON' : sensorData.locationStatus === 'cached' ? 'LAST' : sensorData.locationStatus.toUpperCase()}</span>
         </div>
         
         {/* Warning strip */}

@@ -36,8 +36,8 @@ export function AlertSystem() {
 
       // Doors open while moving
       if (sensorData.speed > 0) {
-        if (sensorData.driverDoor) fireAlert('door-driver', 'Driver Door Open!', 'Vehicle is in motion with door open.', 'destructive');
-        if (sensorData.passengerDoor) fireAlert('door-pass', 'Passenger Door Open!', 'Vehicle is in motion with door open.', 'destructive');
+        if (sensorData.driverDoor) fireAlert('door-driver', 'Driver RH Door Open!', 'Vehicle is in motion with door open.', 'destructive');
+        if (sensorData.passengerDoor) fireAlert('door-pass', 'Passenger LH Door Open!', 'Vehicle is in motion with door open.', 'destructive');
         if (sensorData.rearLeftDoor) fireAlert('door-rl', 'Rear Left Door Open!', 'Vehicle is in motion with door open.', 'destructive');
         if (sensorData.rearRightDoor) fireAlert('door-rr', 'Rear Right Door Open!', 'Vehicle is in motion with door open.', 'destructive');
         if (sensorData.boot) fireAlert('door-boot', 'Boot Open!', 'Vehicle is in motion with boot open.', 'destructive');

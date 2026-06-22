@@ -15,7 +15,7 @@ export interface SensorData {
   latitude: number | null;
   longitude: number | null;
   locationAccuracy: number | null;
-  locationStatus: "disabled" | "idle" | "requesting" | "available" | "denied" | "unavailable";
+  locationStatus: "disabled" | "idle" | "requesting" | "available" | "cached" | "denied" | "unavailable";
   engineRunning: boolean;
   timestamp: number;
 }
@@ -52,9 +52,63 @@ let currentData = { ...defaultSensorData };
 
 const notify = () => listeners.forEach(listener => listener(currentData));
 const TRUSTED_DEVICE_KEY = "forester-dash-trusted-location-device";
+const LAST_LOCATION_KEY = "forester-dash-last-tablet-location";
 
 const isTrustedLocationDevice = () =>
   typeof window !== "undefined" && localStorage.getItem(TRUSTED_DEVICE_KEY) === "true";
+
+function loadLastTabletLocation() {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const saved = localStorage.getItem(LAST_LOCATION_KEY);
+    if (!saved) return null;
+
+    const parsed = JSON.parse(saved) as Partial<SensorData>;
+    if (typeof parsed.latitude !== "number" || typeof parsed.longitude !== "number") {
+      return null;
+    }
+
+    return {
+      latitude: parsed.latitude,
+      longitude: parsed.longitude,
+      locationAccuracy: typeof parsed.locationAccuracy === "number" ? parsed.locationAccuracy : null,
+      outsideTemp: typeof parsed.outsideTemp === "number" ? parsed.outsideTemp : null,
+      timestamp: typeof parsed.timestamp === "number" ? parsed.timestamp : Date.now(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function saveLastTabletLocation(data: SensorData) {
+  if (typeof window === "undefined" || data.latitude === null || data.longitude === null) return;
+
+  localStorage.setItem(
+    LAST_LOCATION_KEY,
+    JSON.stringify({
+      latitude: data.latitude,
+      longitude: data.longitude,
+      locationAccuracy: data.locationAccuracy,
+      outsideTemp: data.outsideTemp,
+      timestamp: data.timestamp,
+    })
+  );
+}
+
+function useLastTabletLocation(status: SensorData["locationStatus"] = "cached") {
+  const lastLocation = loadLastTabletLocation();
+  if (!lastLocation) return false;
+
+  currentData = {
+    ...currentData,
+    ...lastLocation,
+    locationStatus: status,
+    timestamp: Date.now(),
+  };
+  notify();
+  return true;
+}
 
 function clearLocationData(status: SensorData["locationStatus"] = "disabled") {
   currentData = {
@@ -116,9 +170,13 @@ export const VehicleApi = {
       return;
     }
 
+    useLastTabletLocation("cached");
+
     if (!("geolocation" in navigator)) {
-      currentData = { ...currentData, locationStatus: "unavailable", timestamp: Date.now() };
-      notify();
+      if (!useLastTabletLocation("cached")) {
+        currentData = { ...currentData, locationStatus: "unavailable", timestamp: Date.now() };
+        notify();
+      }
       return;
     }
 
@@ -136,13 +194,17 @@ export const VehicleApi = {
           locationStatus: "available",
           timestamp: Date.now(),
         };
+        saveLastTabletLocation(currentData);
         notify();
         void updateWeather(latitude, longitude);
       },
       (error) => {
+        const fallbackStatus = error.code === error.PERMISSION_DENIED ? "denied" : "unavailable";
+        if (useLastTabletLocation("cached")) return;
+
         currentData = {
           ...currentData,
-          locationStatus: error.code === error.PERMISSION_DENIED ? "denied" : "unavailable",
+          locationStatus: fallbackStatus,
           timestamp: Date.now(),
         };
         notify();
@@ -184,6 +246,7 @@ export const VehicleApi = {
       VehicleApi.startSimulation();
     } else {
       localStorage.removeItem(TRUSTED_DEVICE_KEY);
+      localStorage.removeItem(LAST_LOCATION_KEY);
       stopLocationWatch();
       clearLocationData("disabled");
     }

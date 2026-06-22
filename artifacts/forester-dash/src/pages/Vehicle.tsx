@@ -86,16 +86,16 @@ function ForesterPhoto({ s }: { s: SensorData }) {
       {/* Driver front door — left side, upper */}
       <PanelOverlay
         open={s.driverDoor}
-        rounded="rounded-l-xl"
-        style={{ top: "28%", left: "4%", width: "12%", height: "22%" }}
+        rounded="rounded-r-xl"
+        style={{ top: "28%", right: "4%", width: "12%", height: "22%" }}
         label="OPEN"
       />
 
       {/* Passenger front door — right side, upper */}
       <PanelOverlay
         open={s.passengerDoor}
-        rounded="rounded-r-xl"
-        style={{ top: "28%", right: "4%", width: "12%", height: "22%" }}
+        rounded="rounded-l-xl"
+        style={{ top: "28%", left: "4%", width: "12%", height: "22%" }}
         label="OPEN"
       />
 
@@ -190,7 +190,7 @@ export default function Vehicle() {
 
         {/* Left door chips */}
         <div className="flex flex-col gap-2 shrink-0 w-[76px]">
-          <StatusChip label="Driver" value={sensorData.driverDoor ? "OPEN" : "Closed"} warning={sensorData.driverDoor} />
+          <StatusChip label="Pass LH" value={sensorData.passengerDoor ? "OPEN" : "Closed"} warning={sensorData.passengerDoor} />
           <StatusChip label="Rear L" value={sensorData.rearLeftDoor ? "OPEN" : "Closed"} warning={sensorData.rearLeftDoor} />
         </div>
 
@@ -201,7 +201,7 @@ export default function Vehicle() {
 
         {/* Right door chips */}
         <div className="flex flex-col gap-2 shrink-0 w-[76px]">
-          <StatusChip label="Passngr" value={sensorData.passengerDoor ? "OPEN" : "Closed"} warning={sensorData.passengerDoor} />
+          <StatusChip label="Driver RH" value={sensorData.driverDoor ? "OPEN" : "Closed"} warning={sensorData.driverDoor} />
           <StatusChip label="Rear R" value={sensorData.rearRightDoor ? "OPEN" : "Closed"} warning={sensorData.rearRightDoor} />
         </div>
       </div>
@@ -209,7 +209,7 @@ export default function Vehicle() {
       {/* Bottom status chips */}
       <div className="flex gap-2 justify-center flex-wrap px-4 pb-1 shrink-0">
         <StatusChip label="Outside" value={sensorData.outsideTemp === null ? "--" : `${sensorData.outsideTemp.toFixed(0)} C`} />
-        <StatusChip label="Location" value={sensorData.locationStatus === "available" ? "ON" : sensorData.locationStatus.toUpperCase()} active={sensorData.locationStatus === "available"} />
+        <StatusChip label="Location" value={sensorData.locationStatus === "available" ? "ON" : sensorData.locationStatus === "cached" ? "LAST" : sensorData.locationStatus.toUpperCase()} active={sensorData.locationStatus === "available" || sensorData.locationStatus === "cached"} />
         <StatusChip label="Bonnet" value={sensorData.bonnet ? "OPEN" : "Closed"} warning={sensorData.bonnet} />
         <StatusChip label="Boot" value={sensorData.boot ? "OPEN" : "Closed"} warning={sensorData.boot} />
       </div>
@@ -245,8 +245,8 @@ export default function Vehicle() {
                 {([
                   ["engineRunning", "Engine Running"],
                   ["handbrake", "Handbrake"],
-                  ["driverDoor", "Driver Door"],
-                  ["passengerDoor", "Passenger Door"],
+                  ["driverDoor", "Driver Door (RH)"],
+                  ["passengerDoor", "Passenger Door (LH)"],
                   ["rearLeftDoor", "Rear Left Door"],
                   ["rearRightDoor", "Rear Right Door"],
                   ["bonnet", "Bonnet"],

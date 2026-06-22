@@ -75,12 +75,14 @@ export default function Dashboard() {
 
   const tyrePosLabel: Record<string, string> = { FL: 'Front L', FR: 'Front R', RL: 'Rear L', RR: 'Rear R', Spare: 'Spare' };
   const outsideTemp = sensorData.outsideTemp === null ? '--' : sensorData.outsideTemp.toFixed(1);
+  const hasLocation = sensorData.latitude !== null && sensorData.longitude !== null;
   const locationText =
-    sensorData.locationStatus === 'available' && sensorData.latitude !== null && sensorData.longitude !== null ? `${sensorData.latitude.toFixed(4)}, ${sensorData.longitude.toFixed(4)}`
+    hasLocation ? `${sensorData.latitude!.toFixed(4)}, ${sensorData.longitude!.toFixed(4)}`
       : sensorData.locationStatus === 'denied' ? 'Permission denied'
         : sensorData.locationStatus === 'requesting' ? 'Requesting...'
           : sensorData.locationStatus === 'disabled' ? 'Not car tablet'
             : 'No location';
+  const locationLabel = sensorData.locationStatus === 'cached' ? 'Last tablet location' : 'Location';
 
   return (
     <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto pb-32 animate-in fade-in duration-500">
@@ -134,7 +136,7 @@ export default function Dashboard() {
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-4 flex items-center justify-between">
             <div className="min-w-0">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Location</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{locationLabel}</p>
               <p className="text-lg font-mono font-bold truncate">{locationText}</p>
             </div>
             <MapPin className="w-7 h-7 text-muted-foreground/25 shrink-0" />
@@ -239,7 +241,7 @@ export default function Dashboard() {
                   </div>
                 ))}
                 <p className="text-xs text-muted-foreground pt-1">
-                  Last: JAX Tyres oil filter — 2 Jun 2026 @ 163,000 km
+                  Last: JAX Tyres oil pressure switch — 2 Jun 2026 @ 160,424 km
                 </p>
               </div>
             ) : (
@@ -330,8 +332,8 @@ export default function Dashboard() {
         <CardContent className="pt-3">
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
             {[
-              { label: 'Driver', open: sensorData.driverDoor },
-              { label: 'Passenger', open: sensorData.passengerDoor },
+              { label: 'Driver RH', open: sensorData.driverDoor },
+              { label: 'Pass LH', open: sensorData.passengerDoor },
               { label: 'Rear L', open: sensorData.rearLeftDoor },
               { label: 'Rear R', open: sensorData.rearRightDoor },
               { label: 'Boot', open: sensorData.boot },

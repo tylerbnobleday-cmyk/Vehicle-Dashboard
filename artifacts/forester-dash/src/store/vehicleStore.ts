@@ -309,7 +309,7 @@ const defaultServices: ServiceRecord[] = [
   },
   {
     id: 's20', type: '162,000 km Service', provider: '',
-    date: new Date('2026-06-01').toISOString(), odometer: 163000,
+    date: new Date('2026-06-22').toISOString(), odometer: 163275,
     status: 'OVERDUE', notes: 'Next scheduled service. Not yet completed — oil filter replaced separately at JAX Tyres 2 Jun 2026, but full service (oil, spark plugs, filters) still required.'
   },
   {
