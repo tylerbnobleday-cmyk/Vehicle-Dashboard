@@ -43,11 +43,6 @@ export function AlertSystem() {
         if (sensorData.boot) fireAlert('door-boot', 'Boot Open!', 'Vehicle is in motion with boot open.', 'destructive');
         if (sensorData.bonnet) fireAlert('door-bonnet', 'Bonnet Open!', 'Vehicle is in motion with bonnet open.', 'destructive');
       }
-
-      // Cabin temp
-      if (sensorData.cabinTemp > 40) {
-        fireAlert('temp-high', 'High Cabin Temperature', `Cabin temp is ${sensorData.cabinTemp.toFixed(1)}°C`, 'destructive');
-      }
       
       // Handbrake
       if (sensorData.handbrake && sensorData.speed > 0) {

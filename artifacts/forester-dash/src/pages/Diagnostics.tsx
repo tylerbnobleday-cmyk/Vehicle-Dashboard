@@ -10,8 +10,8 @@ export default function Diagnostics() {
   
   const sensors = [
     { name: 'Vehicle Speed', value: `${sensorData.speed} km/h`, status: 'Simulated' },
-    { name: 'Cabin Temp', value: `${sensorData.cabinTemp.toFixed(1)}°C`, status: 'Simulated' },
-    { name: 'Outside Temp', value: `${sensorData.outsideTemp.toFixed(1)}°C`, status: 'Simulated' },
+    { name: 'Outside Temp', value: sensorData.outsideTemp === null ? '--' : `${sensorData.outsideTemp.toFixed(1)} C`, status: 'Weather' },
+    { name: 'Location', value: sensorData.latitude === null || sensorData.longitude === null ? sensorData.locationStatus : `${sensorData.latitude.toFixed(4)}, ${sensorData.longitude.toFixed(4)}`, status: 'Browser' },
     { name: 'Driver Door', value: sensorData.driverDoor ? 'OPEN' : 'CLOSED', status: 'Simulated' },
     { name: 'Boot', value: sensorData.boot ? 'OPEN' : 'CLOSED', status: 'Simulated' },
   ];
@@ -29,7 +29,7 @@ export default function Diagnostics() {
               </div>
               <div>
                 <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Connection</p>
-                <h3 className="text-xl font-bold text-green-500 uppercase">Simulated Mode</h3>
+                <h3 className="text-xl font-bold text-green-500 uppercase">Browser Mode</h3>
               </div>
             </div>
             <p className="text-sm text-muted-foreground font-mono mt-4">Last update: {format(sensorData.timestamp, 'HH:mm:ss.SSS')}</p>
@@ -62,7 +62,7 @@ export default function Diagnostics() {
                 <h3 className="text-xl font-bold uppercase text-amber-500">Not Connected</h3>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground font-mono mt-4">Awaiting ESP32/OBD interface</p>
+            <p className="text-sm text-muted-foreground font-mono mt-4">Location uses browser geolocation when allowed</p>
           </CardContent>
         </Card>
       </div>
@@ -102,8 +102,8 @@ export default function Diagnostics() {
         <CardContent className="p-4 h-[200px] overflow-y-auto text-sm space-y-2 text-green-500/80">
           <p>[{format(Date.now() - 50000, 'HH:mm:ss')}] APP_INIT: LocalStorage driver mounted.</p>
           <p>[{format(Date.now() - 49000, 'HH:mm:ss')}] DATA_SYNC: Loaded state successfully.</p>
-          <p>[{format(Date.now() - 48000, 'HH:mm:ss')}] SIMULATION: Vehicle data simulator started.</p>
-          <p>[{format(Date.now() - 20000, 'HH:mm:ss')}] SENSOR_UPDATE: Engine=false, Speed=0.</p>
+          <p>[{format(Date.now() - 48000, 'HH:mm:ss')}] LOCATION: Browser geolocation requested.</p>
+          <p>[{format(Date.now() - 20000, 'HH:mm:ss')}] WEATHER: Outside temperature sync active.</p>
           <p className="text-primary">[{format(sensorData.timestamp, 'HH:mm:ss')}] HEARTBEAT: OK.</p>
         </CardContent>
       </Card>

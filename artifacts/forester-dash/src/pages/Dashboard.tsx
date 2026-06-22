@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  AlertCircle, Thermometer, Wind, CheckCircle2,
-  Wrench, CircleDot, ShieldCheck, Activity, Car, TriangleAlert
+  AlertCircle, Thermometer, CheckCircle2,
+  Wrench, CircleDot, ShieldCheck, Activity, Car, TriangleAlert, MapPin
 } from "lucide-react";
 import { format } from "date-fns";
 import foresterHero from "@/assets/forester-hero.png";
@@ -72,9 +72,14 @@ export default function Dashboard() {
     activeAlerts.push("Door Open");
   if (sensorData.boot) activeAlerts.push("Boot Open");
   if (sensorData.bonnet) activeAlerts.push("Bonnet Open");
-  if (sensorData.cabinTemp > 40) activeAlerts.push("High Cabin Temp");
 
   const tyrePosLabel: Record<string, string> = { FL: 'Front L', FR: 'Front R', RL: 'Rear L', RR: 'Rear R', Spare: 'Spare' };
+  const outsideTemp = sensorData.outsideTemp === null ? '--' : sensorData.outsideTemp.toFixed(1);
+  const locationText =
+    sensorData.locationStatus === 'available' && sensorData.latitude !== null && sensorData.longitude !== null ? `${sensorData.latitude.toFixed(4)}, ${sensorData.longitude.toFixed(4)}`
+      : sensorData.locationStatus === 'denied' ? 'Permission denied'
+        : sensorData.locationStatus === 'requesting' ? 'Requesting...'
+          : 'No location';
 
   return (
     <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto pb-32 animate-in fade-in duration-500">
@@ -119,19 +124,19 @@ export default function Dashboard() {
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Cabin</p>
-              <p className="text-3xl font-mono font-bold">{sensorData.cabinTemp.toFixed(1)}°</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Outside</p>
+              <p className="text-3xl font-mono font-bold">{outsideTemp} C</p>
             </div>
             <Thermometer className="w-7 h-7 text-muted-foreground/25" />
           </CardContent>
         </Card>
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Outside</p>
-              <p className="text-3xl font-mono font-bold">{sensorData.outsideTemp.toFixed(1)}°</p>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Location</p>
+              <p className="text-lg font-mono font-bold truncate">{locationText}</p>
             </div>
-            <Wind className="w-7 h-7 text-muted-foreground/25" />
+            <MapPin className="w-7 h-7 text-muted-foreground/25 shrink-0" />
           </CardContent>
         </Card>
         <Card className="bg-card/50 border-border/50">

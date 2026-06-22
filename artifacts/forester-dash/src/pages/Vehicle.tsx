@@ -17,10 +17,8 @@ interface StatusChipProps {
 function StatusChip({ label, value, active, warning }: StatusChipProps) {
   return (
     <div className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl border text-center min-w-[72px] transition-all duration-300
-      ${warning
-        ? "bg-red-500/15 border-red-500/40 shadow-[0_0_12px_rgba(239,68,68,0.2)]"
-        : active
-        ? "bg-primary/10 border-primary/30"
+      ${warning ? "bg-red-500/15 border-red-500/40 shadow-[0_0_12px_rgba(239,68,68,0.2)]"
+        : active ? "bg-primary/10 border-primary/30"
         : "bg-card/60 border-border/40"}`}>
       <span className="text-[9px] uppercase tracking-widest font-semibold text-muted-foreground">{label}</span>
       <span className={`text-sm font-bold leading-tight ${warning ? "text-red-400" : active ? "text-primary" : "text-foreground"}`}>{value}</span>
@@ -174,8 +172,7 @@ export default function Vehicle() {
           <p className="text-sm text-muted-foreground">2010 Subaru Forester XS</p>
         </div>
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold border transition-all duration-500
-          ${sensorData.engineRunning
-            ? "bg-green-500/10 border-green-500/40 text-green-400"
+          ${sensorData.engineRunning ? "bg-green-500/10 border-green-500/40 text-green-400"
             : "bg-muted/40 border-border/40 text-muted-foreground"}`}>
           <span className={`w-2 h-2 rounded-full transition-colors duration-500 ${sensorData.engineRunning ? "bg-green-400 animate-pulse" : "bg-muted-foreground"}`} />
           {sensorData.engineRunning ? "ENGINE ON" : "ENGINE OFF"}
@@ -211,8 +208,8 @@ export default function Vehicle() {
 
       {/* Bottom status chips */}
       <div className="flex gap-2 justify-center flex-wrap px-4 pb-1 shrink-0">
-        <StatusChip label="Cabin" value={`${sensorData.cabinTemp.toFixed(0)}°C`} warning={sensorData.cabinTemp > 38} />
-        <StatusChip label="Outside" value={`${sensorData.outsideTemp.toFixed(0)}°C`} />
+        <StatusChip label="Outside" value={sensorData.outsideTemp === null ? "--" : `${sensorData.outsideTemp.toFixed(0)} C`} />
+        <StatusChip label="Location" value={sensorData.locationStatus === "available" ? "ON" : sensorData.locationStatus.toUpperCase()} active={sensorData.locationStatus === "available"} />
         <StatusChip label="Bonnet" value={sensorData.bonnet ? "OPEN" : "Closed"} warning={sensorData.bonnet} />
         <StatusChip label="Boot" value={sensorData.boot ? "OPEN" : "Closed"} warning={sensorData.boot} />
       </div>

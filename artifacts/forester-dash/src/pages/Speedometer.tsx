@@ -1,7 +1,7 @@
 import { useVehicleStore } from "@/store/vehicleStore";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
-import { AlertTriangle, Thermometer, Wind, CircleParking } from "lucide-react";
+import { AlertTriangle, Thermometer, MapPin, CircleParking } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Speedometer() {
@@ -13,7 +13,7 @@ export default function Speedometer() {
     return () => clearInterval(timer);
   }, []);
 
-  const hasWarnings = sensorData.cabinTemp > 40 || sensorData.boot || sensorData.bonnet || sensorData.driverDoor || sensorData.passengerDoor || sensorData.rearLeftDoor || sensorData.rearRightDoor;
+  const hasWarnings = sensorData.boot || sensorData.bonnet || sensorData.driverDoor || sensorData.passengerDoor || sensorData.rearLeftDoor || sensorData.rearRightDoor;
 
   return (
     <motion.div 
@@ -24,8 +24,8 @@ export default function Speedometer() {
       {/* Top Status Bar */}
       <div className="flex justify-between items-center px-8 py-4 border-b border-border/30">
         <div className="flex gap-8 text-xl font-mono text-muted-foreground font-semibold">
-          <span>OUT: {sensorData.outsideTemp.toFixed(1)}°</span>
-          <span>CABIN: {sensorData.cabinTemp.toFixed(1)}°</span>
+          <span>OUT: {sensorData.outsideTemp === null ? '--' : sensorData.outsideTemp.toFixed(1)} C</span>
+          <span>LOC: {sensorData.locationStatus === 'available' ? 'ON' : sensorData.locationStatus.toUpperCase()}</span>
         </div>
         
         {/* Warning strip */}
@@ -58,15 +58,15 @@ export default function Speedometer() {
       {/* Bottom Gauges */}
       <div className="grid grid-cols-3 gap-8 px-12">
         <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-card/40 border border-border/50">
-          <Thermometer className={`w-10 h-10 mb-2 ${sensorData.cabinTemp > 40 ? 'text-red-500' : 'text-primary'}`} />
-          <span className="text-4xl font-mono font-bold">{sensorData.cabinTemp.toFixed(1)}<span className="text-2xl text-muted-foreground">°</span></span>
-          <span className="text-sm text-muted-foreground uppercase tracking-widest mt-2">Cabin</span>
+          <Thermometer className="w-10 h-10 mb-2 text-primary" />
+          <span className="text-4xl font-mono font-bold">{sensorData.outsideTemp === null ? '--' : sensorData.outsideTemp.toFixed(1)}<span className="text-2xl text-muted-foreground"> C</span></span>
+          <span className="text-sm text-muted-foreground uppercase tracking-widest mt-2">Outside</span>
         </div>
         
         <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-card/40 border border-border/50">
-          <Wind className="w-10 h-10 mb-2 text-primary" />
-          <span className="text-4xl font-mono font-bold">{sensorData.outsideTemp.toFixed(1)}<span className="text-2xl text-muted-foreground">°</span></span>
-          <span className="text-sm text-muted-foreground uppercase tracking-widest mt-2">Outside</span>
+          <MapPin className="w-10 h-10 mb-2 text-primary" />
+          <span className="text-2xl font-mono font-bold">{sensorData.latitude === null || sensorData.longitude === null ? '--' : `${sensorData.latitude.toFixed(3)}, ${sensorData.longitude.toFixed(3)}`}</span>
+          <span className="text-sm text-muted-foreground uppercase tracking-widest mt-2">Location</span>
         </div>
 
         <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-card/40 border border-border/50">

@@ -129,11 +129,11 @@ const defaultTyres: TyreRecord[] = [
   },
   {
     id: '3', position: 'RL', brand: 'Unknown', pressure: 33, targetPressure: 33,
-    condition: 'Good', installDate: '', notes: 'Checked about one month ago and confirmed OK.'
+    condition: 'Replace', installDate: '', notes: 'Pressure is OK, but rear tyre needs replacement.'
   },
   {
     id: '4', position: 'RR', brand: 'Unknown', pressure: 33, targetPressure: 33,
-    condition: 'Good', installDate: '', notes: 'Checked about one month ago and confirmed OK.'
+    condition: 'Replace', installDate: '', notes: 'Pressure is OK, but rear tyre needs replacement.'
   },
   {
     id: '5', position: 'Spare', brand: 'Blown front-left tyre', pressure: 0, targetPressure: 33,
@@ -146,6 +146,11 @@ const defaultRepairs: RepairRecord[] = [
     id: 'r1', title: 'Front Left Tyre - Replace Blown Tyre', priority: 'High', status: 'Not Started',
     notes: 'Spare is currently fitted on the front left. Original front-left tyre is blown and stored in the boot.',
     dateCreated: new Date('2026-06-01').toISOString()
+  },
+  {
+    id: 'r2', title: 'Rear Tyres - Replace', priority: 'Critical', status: 'Not Started',
+    notes: 'Rear left and rear right tyres need replacement. Pressure is currently OK at 33 psi.',
+    dateCreated: new Date('2026-06-22').toISOString()
   },
   {
     id: 'r3', title: 'Check Engine Light', priority: 'High', status: 'Not Started',
@@ -304,7 +309,11 @@ const defaultReminders: ReminderRecord[] = [
     recurring: true, status: 'Upcoming'
   },
   {
-    id: 'rm3', title: 'Replace Blown Front-Left Tyre', type: 'Tyre',
+    id: 'rm3', title: 'Replace Rear Tyres', type: 'Tyre',
+    dueDate: '', notes: 'Rear left and rear right tyres need replacement. Pressure is currently OK.', recurring: false, status: 'Due Soon'
+  },
+  {
+    id: 'rm7', title: 'Replace Blown Front-Left Tyre', type: 'Tyre',
     dueDate: '', notes: 'Spare is fitted on the front left. Blown original front-left tyre is in the boot.', recurring: false, status: 'Due Soon'
   },
   {
@@ -375,7 +384,7 @@ export const useVehicleStore = create<VehicleState>()(
       })
     }),
     {
-      name: 'vehicle-storage-v5',
+      name: 'vehicle-storage-v6',
       partialize: (state) => ({
         info: state.info,
         services: state.services,
