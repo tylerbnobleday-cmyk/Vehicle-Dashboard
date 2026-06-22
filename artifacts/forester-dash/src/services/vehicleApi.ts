@@ -1,6 +1,5 @@
 export interface SensorData {
   speed: number;
-  batteryVoltage: number;
   driverDoor: boolean;
   passengerDoor: boolean;
   rearLeftDoor: boolean;
@@ -15,14 +14,11 @@ export interface SensorData {
   cabinTemp: number;
   outsideTemp: number;
   engineRunning: boolean;
-  fuelLevel: number;
-  rpm: number;
   timestamp: number;
 }
 
 export const defaultSensorData: SensorData = {
   speed: 0,
-  batteryVoltage: 12.6,
   driverDoor: false,
   passengerDoor: false,
   rearLeftDoor: false,
@@ -37,8 +33,6 @@ export const defaultSensorData: SensorData = {
   cabinTemp: 22,
   outsideTemp: 16,
   engineRunning: false,
-  fuelLevel: 75,
-  rpm: 0,
   timestamp: Date.now()
 };
 
@@ -55,14 +49,8 @@ export const VehicleApi = {
       // Simulate minor variations
       currentData = {
         ...currentData,
-        batteryVoltage: currentData.engineRunning 
-          ? 13.8 + (Math.random() * 0.4) 
-          : Math.max(11.8, currentData.batteryVoltage - (Math.random() * 0.01)),
         cabinTemp: currentData.cabinTemp + (Math.random() * 0.2 - 0.1),
         outsideTemp: currentData.outsideTemp + (Math.random() * 0.1 - 0.05),
-        rpm: currentData.engineRunning 
-          ? (currentData.speed > 0 ? 1500 + Math.random() * 1000 : 750 + Math.random() * 50) 
-          : 0,
         timestamp: Date.now()
       };
       

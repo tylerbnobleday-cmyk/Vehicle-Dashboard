@@ -1,7 +1,7 @@
 import { useVehicleStore } from "@/store/vehicleStore";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
-import { Battery, Zap, AlertTriangle, Droplet } from "lucide-react";
+import { AlertTriangle, Thermometer, Wind, CircleParking } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Speedometer() {
@@ -13,7 +13,7 @@ export default function Speedometer() {
     return () => clearInterval(timer);
   }, []);
 
-  const hasWarnings = sensorData.batteryVoltage < 12.0 || sensorData.cabinTemp > 40 || sensorData.boot || sensorData.bonnet || sensorData.driverDoor || sensorData.passengerDoor || sensorData.rearLeftDoor || sensorData.rearRightDoor;
+  const hasWarnings = sensorData.cabinTemp > 40 || sensorData.boot || sensorData.bonnet || sensorData.driverDoor || sensorData.passengerDoor || sensorData.rearLeftDoor || sensorData.rearRightDoor;
 
   return (
     <motion.div 
@@ -58,21 +58,21 @@ export default function Speedometer() {
       {/* Bottom Gauges */}
       <div className="grid grid-cols-3 gap-8 px-12">
         <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-card/40 border border-border/50">
-          <Battery className={`w-10 h-10 mb-2 ${sensorData.batteryVoltage < 12 ? 'text-red-500' : 'text-primary'}`} />
-          <span className="text-4xl font-mono font-bold">{sensorData.batteryVoltage.toFixed(1)}<span className="text-2xl text-muted-foreground">V</span></span>
-          <span className="text-sm text-muted-foreground uppercase tracking-widest mt-2">Battery</span>
+          <Thermometer className={`w-10 h-10 mb-2 ${sensorData.cabinTemp > 40 ? 'text-red-500' : 'text-primary'}`} />
+          <span className="text-4xl font-mono font-bold">{sensorData.cabinTemp.toFixed(1)}<span className="text-2xl text-muted-foreground">°</span></span>
+          <span className="text-sm text-muted-foreground uppercase tracking-widest mt-2">Cabin</span>
         </div>
         
         <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-card/40 border border-border/50">
-          <Zap className="w-10 h-10 mb-2 text-primary" />
-          <span className="text-4xl font-mono font-bold">{Math.round(sensorData.rpm)}<span className="text-2xl text-muted-foreground"></span></span>
-          <span className="text-sm text-muted-foreground uppercase tracking-widest mt-2">RPM</span>
+          <Wind className="w-10 h-10 mb-2 text-primary" />
+          <span className="text-4xl font-mono font-bold">{sensorData.outsideTemp.toFixed(1)}<span className="text-2xl text-muted-foreground">°</span></span>
+          <span className="text-sm text-muted-foreground uppercase tracking-widest mt-2">Outside</span>
         </div>
 
         <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-card/40 border border-border/50">
-          <Droplet className={`w-10 h-10 mb-2 ${sensorData.fuelLevel < 15 ? 'text-amber-500' : 'text-primary'}`} />
-          <span className="text-4xl font-mono font-bold">{Math.round(sensorData.fuelLevel)}<span className="text-2xl text-muted-foreground">%</span></span>
-          <span className="text-sm text-muted-foreground uppercase tracking-widest mt-2">Fuel</span>
+          <CircleParking className={`w-10 h-10 mb-2 ${sensorData.handbrake ? 'text-red-500' : 'text-primary'}`} />
+          <span className="text-4xl font-mono font-bold">{sensorData.handbrake ? 'ON' : 'OFF'}</span>
+          <span className="text-sm text-muted-foreground uppercase tracking-widest mt-2">Brake</span>
         </div>
       </div>
     </motion.div>

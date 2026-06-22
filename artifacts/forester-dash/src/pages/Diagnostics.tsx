@@ -10,9 +10,6 @@ export default function Diagnostics() {
   
   const sensors = [
     { name: 'Vehicle Speed', value: `${sensorData.speed} km/h`, status: 'Simulated' },
-    { name: 'Battery Voltage', value: `${sensorData.batteryVoltage.toFixed(1)} V`, status: 'Simulated' },
-    { name: 'Engine RPM', value: `${Math.round(sensorData.rpm)}`, status: 'Simulated' },
-    { name: 'Fuel Level', value: `${Math.round(sensorData.fuelLevel)}%`, status: 'Simulated' },
     { name: 'Cabin Temp', value: `${sensorData.cabinTemp.toFixed(1)}°C`, status: 'Simulated' },
     { name: 'Outside Temp', value: `${sensorData.outsideTemp.toFixed(1)}°C`, status: 'Simulated' },
     { name: 'Driver Door', value: sensorData.driverDoor ? 'OPEN' : 'CLOSED', status: 'Simulated' },

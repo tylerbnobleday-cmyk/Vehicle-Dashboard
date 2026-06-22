@@ -120,47 +120,37 @@ const defaultInfo: VehicleInfo = {
 
 const defaultTyres: TyreRecord[] = [
   {
-    id: '1', position: 'FL', brand: 'Unknown', pressure: 0, targetPressure: 33,
-    condition: 'Poor', installDate: '', notes: 'Needs inspection — condition requires assessment'
+    id: '1', position: 'FL', brand: 'Spare fitted', pressure: 33, targetPressure: 33,
+    condition: 'Good', installDate: '', notes: 'Spare wheel is currently fitted on the front left.'
   },
   {
-    id: '2', position: 'FR', brand: 'Unknown', pressure: 0, targetPressure: 33,
-    condition: 'Fair', installDate: '', notes: 'Serviceable — pressure unknown'
+    id: '2', position: 'FR', brand: 'Unknown', pressure: 33, targetPressure: 33,
+    condition: 'Good', installDate: '', notes: 'Checked about one month ago and confirmed OK.'
   },
   {
-    id: '3', position: 'RL', brand: 'Unknown', pressure: 0, targetPressure: 33,
-    condition: 'Replace', installDate: '', notes: 'DANGEROUS — Tread worn out, steel belts/wires visible. Replace immediately.'
+    id: '3', position: 'RL', brand: 'Unknown', pressure: 33, targetPressure: 33,
+    condition: 'Good', installDate: '', notes: 'Checked about one month ago and confirmed OK.'
   },
   {
-    id: '4', position: 'RR', brand: 'Unknown', pressure: 0, targetPressure: 33,
-    condition: 'Replace', installDate: '', notes: 'DANGEROUS — Tread worn out, steel belts/wires visible. Replace immediately.'
+    id: '4', position: 'RR', brand: 'Unknown', pressure: 33, targetPressure: 33,
+    condition: 'Good', installDate: '', notes: 'Checked about one month ago and confirmed OK.'
   },
   {
-    id: '5', position: 'Spare', brand: 'Unknown', pressure: 0, targetPressure: 33,
-    condition: 'Good', installDate: '', notes: 'Available'
+    id: '5', position: 'Spare', brand: 'Blown front-left tyre', pressure: 0, targetPressure: 33,
+    condition: 'Replace', installDate: '', notes: 'Original front-left tyre is blown and stored in the boot. Replace before using as a spare.'
   },
 ];
 
 const defaultRepairs: RepairRecord[] = [
   {
-    id: 'r1', title: 'Rear Left Tyre — Replace', priority: 'Critical', status: 'Not Started',
-    notes: 'Tread worn out, steel belts/wires visible. Replace immediately — dangerous condition.',
-    dateCreated: new Date('2026-06-01').toISOString()
-  },
-  {
-    id: 'r2', title: 'Rear Right Tyre — Replace', priority: 'Critical', status: 'Not Started',
-    notes: 'Tread worn out, steel belts/wires visible. Replace immediately — dangerous condition.',
+    id: 'r1', title: 'Front Left Tyre - Replace Blown Tyre', priority: 'High', status: 'Not Started',
+    notes: 'Spare is currently fitted on the front left. Original front-left tyre is blown and stored in the boot.',
     dateCreated: new Date('2026-06-01').toISOString()
   },
   {
     id: 'r3', title: 'Check Engine Light', priority: 'High', status: 'Not Started',
     notes: 'CEL active — cause unknown. Remained on after JAX Tyres oil filter work on 2 Jun 2026. Needs OBD scan.',
     dateCreated: new Date('2026-06-02').toISOString()
-  },
-  {
-    id: 'r4', title: 'Front Left Tyre — Inspect', priority: 'High', status: 'Not Started',
-    notes: 'Condition requires assessment. Likely needs replacement.',
-    dateCreated: new Date('2026-06-01').toISOString()
   },
   {
     id: 'r5', title: 'Rear Wiper — Diagnose', priority: 'High', status: 'In Progress',
@@ -314,8 +304,8 @@ const defaultReminders: ReminderRecord[] = [
     recurring: true, status: 'Upcoming'
   },
   {
-    id: 'rm3', title: 'Tyre Replacement — Rear', type: 'Tyre',
-    dueDate: '', notes: 'RL and RR are bald/dangerous. Do not delay.', recurring: false, status: 'Due Soon'
+    id: 'rm3', title: 'Replace Blown Front-Left Tyre', type: 'Tyre',
+    dueDate: '', notes: 'Spare is fitted on the front left. Blown original front-left tyre is in the boot.', recurring: false, status: 'Due Soon'
   },
   {
     id: 'rm4', title: 'Next Oil Change', type: 'Oil',
@@ -385,7 +375,7 @@ export const useVehicleStore = create<VehicleState>()(
       })
     }),
     {
-      name: 'vehicle-storage-v4',
+      name: 'vehicle-storage-v5',
       partialize: (state) => ({
         info: state.info,
         services: state.services,

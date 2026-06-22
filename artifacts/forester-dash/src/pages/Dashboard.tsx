@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  AlertCircle, Battery, Thermometer, Wind, CheckCircle2,
+  AlertCircle, Thermometer, Wind, CheckCircle2,
   Wrench, CircleDot, ShieldCheck, Activity, Car, TriangleAlert
 } from "lucide-react";
 import { format } from "date-fns";
@@ -72,11 +72,7 @@ export default function Dashboard() {
     activeAlerts.push("Door Open");
   if (sensorData.boot) activeAlerts.push("Boot Open");
   if (sensorData.bonnet) activeAlerts.push("Bonnet Open");
-  if (sensorData.batteryVoltage < 12.0) activeAlerts.push("Low Battery");
   if (sensorData.cabinTemp > 40) activeAlerts.push("High Cabin Temp");
-
-  const getVoltColor = (v: number) =>
-    v < 12.0 ? "text-red-500" : v < 12.5 ? "text-amber-400" : "text-green-400";
 
   const tyrePosLabel: Record<string, string> = { FL: 'Front L', FR: 'Front R', RL: 'Rear L', RR: 'Rear R', Spare: 'Spare' };
 
@@ -119,18 +115,7 @@ export default function Dashboard() {
       )}
 
       {/* Live sensor strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Battery</p>
-              <p className={`text-3xl font-mono font-bold ${getVoltColor(sensorData.batteryVoltage)}`}>
-                {sensorData.batteryVoltage.toFixed(1)}V
-              </p>
-            </div>
-            <Battery className="w-7 h-7 text-muted-foreground/25" />
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-4 flex items-center justify-between">
             <div>

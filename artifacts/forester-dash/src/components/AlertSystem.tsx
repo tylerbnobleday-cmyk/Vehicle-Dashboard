@@ -44,13 +44,6 @@ export function AlertSystem() {
         if (sensorData.bonnet) fireAlert('door-bonnet', 'Bonnet Open!', 'Vehicle is in motion with bonnet open.', 'destructive');
       }
 
-      // Battery voltage
-      if (sensorData.batteryVoltage < 12.0) {
-        fireAlert('batt-critical', 'Critical Battery Voltage', `Voltage at ${sensorData.batteryVoltage.toFixed(1)}V`, 'destructive');
-      } else if (sensorData.batteryVoltage >= 12.0 && sensorData.batteryVoltage < 12.4 && !sensorData.engineRunning) {
-        fireAlert('batt-low', 'Low Battery Voltage', `Voltage at ${sensorData.batteryVoltage.toFixed(1)}V`);
-      }
-
       // Cabin temp
       if (sensorData.cabinTemp > 40) {
         fireAlert('temp-high', 'High Cabin Temperature', `Cabin temp is ${sensorData.cabinTemp.toFixed(1)}°C`, 'destructive');

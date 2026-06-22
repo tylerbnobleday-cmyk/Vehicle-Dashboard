@@ -164,8 +164,6 @@ export default function Vehicle() {
     }
   };
 
-  const battV = sensorData.batteryVoltage;
-
   return (
     <div className="min-h-[calc(100dvh-6rem)] flex flex-col pb-4">
 
@@ -187,8 +185,6 @@ export default function Vehicle() {
       {/* Top chips */}
       <div className="flex gap-2 justify-center flex-wrap px-4 py-1 shrink-0">
         <StatusChip label="Speed" value={`${sensorData.speed} km/h`} active={sensorData.speed > 0} />
-        <StatusChip label="Fuel" value={`${Math.round(sensorData.fuelLevel)}%`} warning={sensorData.fuelLevel < 20} active={sensorData.fuelLevel >= 20} />
-        <StatusChip label="RPM" value={sensorData.engineRunning ? `${sensorData.rpm}` : "—"} active={sensorData.engineRunning} />
         <StatusChip label="Handbrake" value={sensorData.handbrake ? "ON" : "OFF"} active={sensorData.handbrake} />
       </div>
 
@@ -215,9 +211,6 @@ export default function Vehicle() {
 
       {/* Bottom status chips */}
       <div className="flex gap-2 justify-center flex-wrap px-4 pb-1 shrink-0">
-        <StatusChip label="Battery"
-          value={`${battV.toFixed(1)}V`}
-          warning={battV < 12.0} active={battV >= 12.5} />
         <StatusChip label="Cabin" value={`${sensorData.cabinTemp.toFixed(0)}°C`} warning={sensorData.cabinTemp > 38} />
         <StatusChip label="Outside" value={`${sensorData.outsideTemp.toFixed(0)}°C`} />
         <StatusChip label="Bonnet" value={sensorData.bonnet ? "OPEN" : "Closed"} warning={sensorData.bonnet} />
