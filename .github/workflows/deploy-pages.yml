@@ -38,6 +38,9 @@ jobs:
         env:
           BASE_PATH: /Vehicle-Dashboard/
 
+      - name: Add SPA fallback
+        run: cp artifacts/forester-dash/dist/public/index.html artifacts/forester-dash/dist/public/404.html
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
