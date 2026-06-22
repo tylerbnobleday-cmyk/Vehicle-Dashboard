@@ -291,9 +291,9 @@ const defaultServices: ServiceRecord[] = [
     status: 'OK', notes: ''
   },
   {
-    id: 's20', type: '200,000 km Service (Scheduled)', provider: 'Strathmore Car Care',
-    date: new Date('2026-06-01').toISOString(), odometer: 162000,
-    status: 'OVERDUE', notes: 'Scheduled 200,000 km service entry. Full service still required.'
+    id: 's20', type: '162,000 km Service', provider: '',
+    date: new Date('2026-06-01').toISOString(), odometer: 163000,
+    status: 'OVERDUE', notes: 'Next scheduled service. Not yet completed — oil filter replaced separately at JAX Tyres 2 Jun 2026, but full service (oil, spark plugs, filters) still required.'
   },
   {
     id: 's21', type: 'Oil Filter Replacement', provider: 'JAX Tyres',
@@ -385,7 +385,7 @@ export const useVehicleStore = create<VehicleState>()(
       })
     }),
     {
-      name: 'vehicle-storage-v3',
+      name: 'vehicle-storage-v4',
       partialize: (state) => ({
         info: state.info,
         services: state.services,
