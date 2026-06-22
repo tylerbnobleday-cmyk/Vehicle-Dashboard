@@ -151,11 +151,11 @@ const defaultTyres: TyreRecord[] = [
   },
   {
     id: '3', position: 'RL', brand: 'Unknown', pressure: 33, targetPressure: 33,
-    condition: 'Replace', installDate: '', notes: 'Pressure is OK, but rear tyre needs replacement.'
+    condition: 'Replace', installDate: '', notes: 'Severely worn/bald. Pressure is OK, but tyre requires immediate replacement. Booked at JAX Tyres & Auto Caulfield South on 23 Jun 2026 at 10:00 AM.'
   },
   {
     id: '4', position: 'RR', brand: 'Unknown', pressure: 33, targetPressure: 33,
-    condition: 'Replace', installDate: '', notes: 'Pressure is OK, but rear tyre needs replacement.'
+    condition: 'Replace', installDate: '', notes: 'Severely worn/bald. Pressure is OK, but tyre requires immediate replacement. Booked at JAX Tyres & Auto Caulfield South on 23 Jun 2026 at 10:00 AM.'
   },
   {
     id: '5', position: 'Spare', brand: 'Blown front-left tyre', pressure: 0, targetPressure: 33,
@@ -166,17 +166,17 @@ const defaultTyres: TyreRecord[] = [
 const defaultRepairs: RepairRecord[] = [
   {
     id: 'r1', title: 'Front Left Tyre - Replace Blown Tyre', priority: 'High', status: 'Not Started',
-    notes: 'Spare is currently fitted on the front left. Original front-left tyre is blown and stored in the boot.',
+    notes: 'Spare is currently fitted on the front left. Original front-left tyre is blown and stored in the boot. Include this in the 23 Jun 2026 JAX booking so three tyres are replaced, not two. Planned tyre model: Key Transmate WZD105.',
     dateCreated: new Date('2026-06-01').toISOString()
   },
   {
-    id: 'r2', title: 'Rear Tyres - Replace', priority: 'Critical', status: 'Not Started',
-    notes: 'Rear left and rear right tyres need replacement. Pressure is currently OK at 33 psi.',
+    id: 'r2', title: 'Tyres - Replace Three at JAX', priority: 'Critical', status: 'Booked',
+    notes: 'Rear tyres are severely worn/bald and require immediate replacement. Appointment booked at JAX Tyres & Auto Caulfield South for 23 Jun 2026 at 10:00 AM. Planned work: replace three tyres using Key Transmate WZD105. After appointment, create service record and mark tyre replacement completed once confirmed.',
     dateCreated: new Date('2026-06-22').toISOString()
   },
   {
-    id: 'r3', title: 'Check Engine Light', priority: 'High', status: 'Not Started',
-    notes: 'CEL active — cause unknown. Remained on after JAX Tyres oil filter work on 2 Jun 2026. Needs OBD scan.',
+    id: 'r3', title: 'Check Engine Light - JAX Diagnosis', priority: 'High', status: 'Booked',
+    notes: 'Existing CEL remains unresolved. Oil pressure switch was replaced by JAX on 2 Jun 2026 at 160,424 km, but CEL remained after repair. Vehicle occasionally hesitates under acceleration/high RPM and same fault has returned. At 23 Jun 2026 JAX appointment, request full diagnostic scan, exact fault code(s), written diagnosis, and repair quote if additional work is required.',
     dateCreated: new Date('2026-06-02').toISOString()
   },
   {
@@ -201,7 +201,7 @@ const defaultRepairs: RepairRecord[] = [
   },
   {
     id: 'r9', title: '162,000 km Full Service', priority: 'High', status: 'Not Started',
-    notes: 'Service overdue — needs oil change, air filter, cabin filter, spark plugs. Oil filter replaced at JAX Tyres 2 Jun 2026.',
+    notes: 'Service remains overdue. Current odometer is 163,275 km, approximately 1,275 km past the 162,000 km service interval. Full service still required: inspect engine oil condition, oil filter, air filter, cabin filter, spark plugs, and general vehicle health. Oil pressure switch was replaced at JAX Tyres on 2 Jun 2026, but this did not complete the scheduled service.',
     dateCreated: new Date('2026-06-01').toISOString()
   },
 ];
@@ -337,19 +337,23 @@ const defaultReminders: ReminderRecord[] = [
   },
   {
     id: 'rm3', title: 'Replace Rear Tyres', type: 'Tyre',
-    dueDate: '', notes: 'Rear left and rear right tyres need replacement. Pressure is currently OK.', recurring: false, status: 'Due Soon'
+    dueDate: new Date('2026-06-23T10:00:00').toISOString(), notes: 'JAX Tyres & Auto Caulfield South booking at 10:00 AM. Replace three tyres, not two. Planned tyre model: Key Transmate WZD105. Rear tyres are severely worn/bald; confirm completion after appointment.', recurring: false, status: 'Due Soon'
   },
   {
     id: 'rm7', title: 'Replace Blown Front-Left Tyre', type: 'Tyre',
-    dueDate: '', notes: 'Spare is fitted on the front left. Blown original front-left tyre is in the boot.', recurring: false, status: 'Due Soon'
+    dueDate: new Date('2026-06-23T10:00:00').toISOString(), notes: 'Spare is fitted on the front left. Blown original front-left tyre is in the boot. Include this as part of the three-tyre JAX replacement booking.', recurring: false, status: 'Due Soon'
   },
   {
     id: 'rm4', title: 'Next Oil Change', type: 'Oil',
     dueDate: '', dueOdometer: 168000, notes: '', recurring: true, status: 'Upcoming'
   },
   {
-    id: 'rm5', title: 'OBD Scan — CEL', type: 'Custom',
-    dueDate: '', notes: 'Check engine light active — scan to find fault code', recurring: false, status: 'Due Soon'
+    id: 'rm5', title: 'JAX Diagnostic Scan - CEL', type: 'Custom',
+    dueDate: new Date('2026-06-23T10:00:00').toISOString(), notes: 'Ask JAX for full diagnostic scan, exact fault code(s), written diagnosis, and repair quote. CEL remains after 2 Jun 2026 oil pressure switch replacement; vehicle sometimes hesitates under acceleration/high RPM.', recurring: false, status: 'Due Soon'
+  },
+  {
+    id: 'rm8', title: 'Schedule 162,000 km Service', type: 'Service',
+    dueDate: '', dueOdometer: 162000, notes: 'Current odometer 163,275 km as of 22 Jun 2026, about 1,275 km overdue. Full service still needed: engine oil condition, oil filter, air filter, cabin filter, spark plugs, and general health check.', recurring: false, status: 'Due Soon'
   },
   {
     id: 'rm6', title: 'Next Camping Trip', type: 'Camping',
