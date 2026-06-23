@@ -8,7 +8,6 @@ import { BottomNav } from "@/components/BottomNav";
 import { AlertSystem } from "@/components/AlertSystem";
 import Dashboard from "@/pages/Dashboard";
 import Vehicle from "@/pages/Vehicle";
-import Speedometer from "@/pages/Speedometer";
 import Service from "@/pages/Service";
 import Tyres from "@/pages/Tyres";
 import Repairs from "@/pages/Repairs";
@@ -26,7 +25,6 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/vehicle" component={Vehicle} />
-      <Route path="/speedometer" component={Speedometer} />
       <Route path="/service" component={Service} />
       <Route path="/tyres" component={Tyres} />
       <Route path="/repairs" component={Repairs} />
