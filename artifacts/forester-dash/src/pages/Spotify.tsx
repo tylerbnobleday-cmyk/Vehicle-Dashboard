@@ -16,7 +16,9 @@ const SPOTIFY_SCOPES = [
   "user-read-currently-playing",
 ].join(" ");
 
-const REDIRECT_URI = window.location.origin + window.location.pathname.replace(/\/$/, "") + "/";
+const SPOTIFY_CLIENT_ID = "7e3432b5296a44a69af55235da632940";
+const APP_BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
+const REDIRECT_URI = `${window.location.origin}${APP_BASE_PATH}/spotify`;
 
 function generateCodeVerifier(length = 128) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
@@ -57,8 +59,8 @@ function msToTime(ms: number) {
 }
 
 export default function Spotify() {
-  const [clientId, setClientId] = useState(() => localStorage.getItem("spotify_client_id") || "");
-  const [clientIdInput, setClientIdInput] = useState(() => localStorage.getItem("spotify_client_id") || "");
+  const [clientId, setClientId] = useState(() => localStorage.getItem("spotify_client_id") || SPOTIFY_CLIENT_ID);
+  const [clientIdInput, setClientIdInput] = useState(() => localStorage.getItem("spotify_client_id") || SPOTIFY_CLIENT_ID);
   const [accessToken, setAccessToken] = useState(() => localStorage.getItem("spotify_access_token") || "");
   const [tokenExpiry, setTokenExpiry] = useState(() => Number(localStorage.getItem("spotify_token_expiry") || 0));
   const [refreshToken, setRefreshToken] = useState(() => localStorage.getItem("spotify_refresh_token") || "");
