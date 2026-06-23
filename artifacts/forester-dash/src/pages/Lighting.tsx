@@ -3,21 +3,26 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Lightbulb, Info } from "lucide-react";
+import { Cpu, Info, Lightbulb } from "lucide-react";
+
+const controllerSetup = [
+  { name: "Lotus Lantern controller", count: 1, detail: "Controls 1 LED controller group" },
+  { name: "Anko LED controller sticks", count: 3, detail: "Controls the other 3 LED controller groups" },
+];
 
 export default function Lighting() {
   const [zones, setZones] = useState([
-    { id: 1, name: 'Driver Footwell', active: true, color: '#0070c0' },
-    { id: 2, name: 'Passenger Footwell', active: true, color: '#0070c0' },
-    { id: 3, name: 'Rear Footwell', active: false, color: '#0070c0' },
-    { id: 4, name: 'Boot Area', active: true, color: '#ffffff' },
-    { id: 5, name: 'Ambient Strip', active: true, color: '#0070c0' },
+    { id: 1, name: "Driver Footwell", active: true, color: "#0070c0" },
+    { id: 2, name: "Passenger Footwell", active: true, color: "#0070c0" },
+    { id: 3, name: "Rear Footwell", active: false, color: "#0070c0" },
+    { id: 4, name: "Boot Area", active: true, color: "#ffffff" },
+    { id: 5, name: "Ambient Strip", active: true, color: "#0070c0" },
   ]);
 
   const [brightness, setBrightness] = useState(80);
 
   const toggleZone = (id: number) => {
-    setZones(zones.map(z => z.id === id ? { ...z, active: !z.active } : z));
+    setZones(zones.map(zone => zone.id === id ? { ...zone, active: !zone.active } : zone));
   };
 
   return (
@@ -27,30 +32,53 @@ export default function Lighting() {
       <div className="bg-primary/20 border border-primary/50 text-primary-foreground p-4 rounded-lg flex items-start gap-4">
         <Info className="w-6 h-6 text-primary mt-1" />
         <div>
-          <h4 className="font-bold uppercase tracking-wider text-primary">Simulation Mode Active</h4>
-          <p className="text-primary-foreground/80 mt-1">Hardware integration for ESP32 WLED controller coming soon. Controls below are simulated.</p>
+          <h4 className="font-bold uppercase tracking-wider text-primary">Installed LED Setup</h4>
+          <p className="text-primary-foreground/80 mt-1">16 LED strips total. Physical control is split across 1 Lotus Lantern controller and 3 Anko LED controller sticks.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-6">
+          <Card className="bg-card/40 border-border/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-5">
+                <div>
+                  <h3 className="text-2xl font-bold uppercase">Hardware Record</h3>
+                  <p className="text-muted-foreground font-mono text-sm uppercase tracking-widest mt-1">16 strips / 4 controller groups</p>
+                </div>
+                <Cpu className="w-8 h-8 text-primary" />
+              </div>
+              <div className="space-y-3">
+                {controllerSetup.map(controller => (
+                  <div key={controller.name} className="flex items-center justify-between rounded-lg border border-border/40 bg-background/30 px-4 py-3">
+                    <div>
+                      <p className="font-bold">{controller.name}</p>
+                      <p className="text-sm text-muted-foreground">{controller.detail}</p>
+                    </div>
+                    <span className="font-mono text-xl font-bold">{controller.count}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="bg-card/40 border-border/50 shadow-lg border-t-4 border-t-primary">
             <CardContent className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h3 className="text-2xl font-bold uppercase">Zone Controller A</h3>
-                  <p className="text-green-500 font-mono text-sm uppercase tracking-widest mt-1">● Online (Simulated)</p>
+                  <p className="text-green-500 font-mono text-sm uppercase tracking-widest mt-1">Online simulated</p>
                 </div>
                 <Lightbulb className="w-8 h-8 text-primary" />
               </div>
-              
+
               <div className="space-y-4">
                 <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Master Brightness</p>
                 <div className="flex items-center gap-4">
-                  <Slider 
-                    value={[brightness]} 
-                    onValueChange={(v) => setBrightness(v[0])} 
-                    max={100} 
+                  <Slider
+                    value={[brightness]}
+                    onValueChange={(value) => setBrightness(value[0])}
+                    max={100}
                     step={1}
                     className="flex-1"
                   />
@@ -65,7 +93,7 @@ export default function Lighting() {
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-2xl font-bold uppercase text-muted-foreground">Zone Controller B</h3>
-                  <p className="text-muted-foreground font-mono text-sm uppercase tracking-widest mt-1">○ Offline</p>
+                  <p className="text-muted-foreground font-mono text-sm uppercase tracking-widest mt-1">Offline</p>
                 </div>
               </div>
             </CardContent>
@@ -75,10 +103,10 @@ export default function Lighting() {
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-muted-foreground uppercase tracking-widest mb-4">Lighting Zones</h3>
           {zones.map(zone => (
-            <Card key={zone.id} className={`bg-card/40 border-border/50 transition-all ${zone.active ? 'border-l-4 border-l-primary' : ''}`}>
+            <Card key={zone.id} className={`bg-card/40 border-border/50 transition-all ${zone.active ? "border-l-4 border-l-primary" : ""}`}>
               <CardContent className="p-5 flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 rounded-full shadow-inner border border-white/20" style={{ backgroundColor: zone.active ? zone.color : '#1e293b' }} />
+                  <div className="w-8 h-8 rounded-full shadow-inner border border-white/20" style={{ backgroundColor: zone.active ? zone.color : "#1e293b" }} />
                   <span className="text-xl font-bold">{zone.name}</span>
                 </div>
                 <Switch checked={zone.active} onCheckedChange={() => toggleZone(zone.id)} className="scale-125" />
