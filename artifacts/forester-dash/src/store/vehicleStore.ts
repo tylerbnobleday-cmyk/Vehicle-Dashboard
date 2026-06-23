@@ -271,8 +271,8 @@ const defaultRepairs: RepairRecord[] = [
     dateCreated: new Date('2026-06-22').toISOString()
   },
   {
-    id: 'r3', title: 'Check Engine Light - Needs Diagnosis', priority: 'High', status: 'Not Started',
-    notes: 'Existing CEL remains unresolved. Oil pressure switch was replaced by JAX on 2 Jun 2026 at 160,424 km, but CEL remained after repair. Vehicle occasionally hesitates under acceleration/high RPM and same fault has returned. JAX invoice 77598 on 23 Jun 2026 shows tyre work only, with no diagnostic scan or fault codes recorded.',
+    id: 'r3', title: 'P0028 Pending DTC - Bank 2 Intake Valve Control', priority: 'High', status: 'In Progress',
+    notes: 'Check engine light is not currently on, but owner OBD scan on 23 Jun 2026 showed pending DTC P0028: Intake Valve Control Solenoid Circuit Range/Performance Bank 2. Fault appears under high RPM/load with occasional hesitation under acceleration. Oil pressure switch was replaced by JAX on 2 Jun 2026 at 160,424 km, but this does not resolve the current pending P0028 issue. Next checks: Bank 2 intake valve control solenoid/OCV, wiring and connector, engine oil level/condition, oil passages, and full diagnostic confirmation with written fault code report.',
     dateCreated: new Date('2026-06-02').toISOString()
   },
   {
@@ -409,6 +409,11 @@ const defaultServices: ServiceRecord[] = [
     status: 'OK', notes: 'Tax invoice 77598 / work order 061491. Fitted 3x Wanli Harmonic Plus SP026 215/65R16 98V tyres. Included balancing, tubeless valves, and waste tyre management. Paid $417.00 including GST $37.91.'
   },
   {
+    id: 's24', type: 'Owner OBD Scan - Pending DTC P0028', provider: 'Owner scan / Ozito OBD reader',
+    date: new Date('2026-06-23').toISOString(), odometer: 163278,
+    status: 'DUE SOON', notes: 'Scanner showed pending DTC P0028: Intake Valve Control Solenoid Circuit Range/Performance Bank 2. Check engine light was not currently on, but symptom appears under high RPM/load. Needs diagnostic confirmation and repair quote.'
+  },
+  {
     id: 's20', type: '162,000 km Service', provider: '',
     date: new Date('2026-06-23').toISOString(), odometer: 163278,
     status: 'OVERDUE', notes: 'Scheduled service remains overdue at 163,278 km. Tyres were completed separately at JAX on 23 Jun 2026, but full service still needs engine oil condition, oil filter, air filter, cabin filter, spark plugs, and general vehicle health check.'
@@ -449,8 +454,8 @@ const defaultReminders: ReminderRecord[] = [
     dueDate: '', dueOdometer: 168000, notes: '', recurring: true, status: 'Upcoming'
   },
   {
-    id: 'rm5', title: 'JAX Diagnostic Scan - CEL', type: 'Custom',
-    dueDate: '', notes: 'Still required. JAX invoice 77598 on 23 Jun 2026 shows tyre work only, with no diagnostic scan or fault codes recorded. Ask for full OBD scan, exact fault code(s), written diagnosis, and repair quote.', recurring: false, status: 'Due Soon'
+    id: 'rm5', title: 'Diagnose P0028 - Bank 2 Intake Valve Control', type: 'Custom',
+    dueDate: '', notes: 'Still required. Owner OBD scan showed pending DTC P0028: Intake Valve Control Solenoid Circuit Range/Performance Bank 2. Check engine light is not currently on, but the fault appears under high RPM/load. Ask mechanic to test Bank 2 OCV/intake valve control solenoid, wiring/connector, oil level/condition, oil passages, and provide written diagnosis plus repair quote.', recurring: false, status: 'Due Soon'
   },
   {
     id: 'rm8', title: 'Schedule 162,000 km Service', type: 'Service',
@@ -548,7 +553,7 @@ export const useVehicleStore = create<VehicleState>()(
       })
     }),
     {
-      name: 'vehicle-storage-v11',
+      name: 'vehicle-storage-v12',
       partialize: (state) => ({
         info: state.info,
         services: state.services,

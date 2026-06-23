@@ -24,6 +24,9 @@ function computeHealthScore(
   const hasCEL = repairs.some(r =>
     r.title.toLowerCase().includes('engine light') ||
     r.title.toLowerCase().includes('cel') ||
+    r.title.toLowerCase().includes('p0028') ||
+    r.notes.toLowerCase().includes('pending dtc') ||
+    r.notes.toLowerCase().includes('p0028') ||
     r.notes.toLowerCase().includes('check engine')
   );
   if (hasCEL) score -= 10;
@@ -188,8 +191,14 @@ export default function Dashboard() {
                   <p className="text-red-400">· {tyres.filter(t => t.condition === 'Replace').length} dangerous tyre(s)</p>
                 )}
                 {overdueServices.length > 0 && <p className="text-amber-400">· Service overdue</p>}
-                {repairs.some(r => r.notes.toLowerCase().includes('check engine') || r.title.toLowerCase().includes('engine light')) && (
-                  <p className="text-amber-400">· Check engine light active</p>
+                {repairs.some(r =>
+                  r.notes.toLowerCase().includes('check engine') ||
+                  r.notes.toLowerCase().includes('pending dtc') ||
+                  r.notes.toLowerCase().includes('p0028') ||
+                  r.title.toLowerCase().includes('engine light') ||
+                  r.title.toLowerCase().includes('p0028')
+                ) && (
+                  <p className="text-amber-400">· Pending OBD fault needs diagnosis</p>
                 )}
                 <p className="text-muted-foreground">· {openRepairs.length} open repair(s)</p>
               </div>
