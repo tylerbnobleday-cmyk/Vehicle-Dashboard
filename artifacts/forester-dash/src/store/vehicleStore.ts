@@ -80,6 +80,39 @@ export interface CampingChecklist {
   items: { id: string; category: string; name: string; checked: boolean }[];
 }
 
+export type LightingColorName = 'Purple' | 'Blue' | 'Green' | 'Red' | 'White' | 'Orange' | 'Yellow' | 'Pink';
+export type LightingZoneId = 'frontCabin' | 'rearCabin' | 'bootArea';
+export type LightingControllerType = 'IR' | 'Bluetooth';
+export type LightingStatus = 'online' | 'offline';
+
+export interface LightingZone {
+  id: LightingZoneId;
+  name: string;
+  controllerName: string;
+  controllerType: LightingControllerType;
+  status: LightingStatus;
+  enabled: boolean;
+  color: LightingColorName;
+  brightness: number;
+  notes: string;
+}
+
+export interface LightingAutomationRule {
+  id: string;
+  event: 'doorOpen' | 'bootOpen' | 'reverseGear' | 'parkingMode' | 'vehicleStatus';
+  targetZones: LightingZoneId[];
+  color: LightingColorName;
+  brightness: number;
+  enabled: boolean;
+}
+
+export interface LightingSystem {
+  colors: Record<LightingColorName, string>;
+  zones: LightingZone[];
+  automationRules: LightingAutomationRule[];
+  lastUpdated: string;
+}
+
 interface VehicleState {
   info: VehicleInfo;
   sensorData: SensorData;
@@ -87,6 +120,7 @@ interface VehicleState {
   tyres: TyreRecord[];
   repairs: RepairRecord[];
   reminders: ReminderRecord[];
+  lighting: LightingSystem;
   campingChecklists: CampingChecklist[];
   quickNotes: string;
 
@@ -108,10 +142,72 @@ interface VehicleState {
   updateReminder: (id: string, reminder: Partial<ReminderRecord>) => void;
   deleteReminder: (id: string) => void;
 
+  updateLightingZone: (id: LightingZoneId, zone: Partial<LightingZone>) => void;
+  setAllLighting: (enabled: boolean) => void;
+  applyLightingPreset: (color: LightingColorName, brightness: number, targetZones?: LightingZoneId[]) => void;
+
   resetData: () => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
+
+const lightingColors: Record<LightingColorName, string> = {
+  Purple: '#8b5cf6',
+  Blue: '#2563eb',
+  Green: '#16a34a',
+  Red: '#dc2626',
+  White: '#f8fafc',
+  Orange: '#f97316',
+  Yellow: '#eab308',
+  Pink: '#ec4899',
+};
+
+const defaultLighting: LightingSystem = {
+  colors: lightingColors,
+  zones: [
+    {
+      id: 'frontCabin',
+      name: 'Front Cabin',
+      controllerName: 'Anko IR controller',
+      controllerType: 'IR',
+      status: 'offline',
+      enabled: true,
+      color: 'Purple',
+      brightness: 80,
+      notes: 'Requires an IR blaster bridge to control from the web app.',
+    },
+    {
+      id: 'rearCabin',
+      name: 'Rear Cabin',
+      controllerName: 'Lotus Lantern Bluetooth controller',
+      controllerType: 'Bluetooth',
+      status: 'offline',
+      enabled: true,
+      color: 'Purple',
+      brightness: 80,
+      notes: 'Designed for future Bluetooth bridge or Web Bluetooth integration.',
+    },
+    {
+      id: 'bootArea',
+      name: 'Boot Area',
+      controllerName: 'Lotus Lantern Bluetooth controller',
+      controllerType: 'Bluetooth',
+      status: 'offline',
+      enabled: true,
+      color: 'Purple',
+      brightness: 80,
+      notes: 'Designed for future Bluetooth bridge or Web Bluetooth integration.',
+    },
+  ],
+  automationRules: [
+    { id: 'door-open', event: 'doorOpen', targetZones: ['frontCabin', 'rearCabin'], color: 'White', brightness: 100, enabled: false },
+    { id: 'boot-open', event: 'bootOpen', targetZones: ['bootArea'], color: 'White', brightness: 100, enabled: false },
+    { id: 'reverse-gear', event: 'reverseGear', targetZones: ['bootArea'], color: 'White', brightness: 100, enabled: false },
+    { id: 'parking-mode', event: 'parkingMode', targetZones: ['frontCabin', 'rearCabin', 'bootArea'], color: 'Purple', brightness: 40, enabled: false },
+    { id: 'vehicle-status', event: 'vehicleStatus', targetZones: ['frontCabin', 'rearCabin', 'bootArea'], color: 'Blue', brightness: 60, enabled: false },
+  ],
+  lastUpdated: new Date('2026-06-23').toISOString(),
+};
 
 const defaultInfo: VehicleInfo = {
   nickname: 'Steamy',
@@ -376,6 +472,7 @@ export const useVehicleStore = create<VehicleState>()(
       tyres: defaultTyres,
       repairs: defaultRepairs,
       reminders: defaultReminders,
+      lighting: defaultLighting,
       campingChecklists: [],
       quickNotes: '',
 
@@ -409,24 +506,56 @@ export const useVehicleStore = create<VehicleState>()(
       })),
       deleteReminder: (id) => set((state) => ({ reminders: state.reminders.filter(r => r.id !== id) })),
 
+      updateLightingZone: (id, zone) => set((state) => ({
+        lighting: {
+          ...state.lighting,
+          zones: state.lighting.zones.map(current => current.id === id ? { ...current, ...zone } : current),
+          lastUpdated: new Date().toISOString(),
+        }
+      })),
+
+      setAllLighting: (enabled) => set((state) => ({
+        lighting: {
+          ...state.lighting,
+          zones: state.lighting.zones.map(zone => ({ ...zone, enabled })),
+          lastUpdated: new Date().toISOString(),
+        }
+      })),
+
+      applyLightingPreset: (color, brightness, targetZones) => set((state) => {
+        const targetSet = new Set(targetZones ?? state.lighting.zones.map(zone => zone.id));
+
+        return {
+          lighting: {
+            ...state.lighting,
+            zones: state.lighting.zones.map(zone =>
+              targetSet.has(zone.id) ? { ...zone, color, brightness, enabled: true } : zone
+            ),
+            lastUpdated: new Date().toISOString(),
+          }
+        };
+      }),
+
       resetData: () => set({
         info: defaultInfo,
         services: defaultServices,
         tyres: defaultTyres,
         repairs: defaultRepairs,
         reminders: defaultReminders,
+        lighting: defaultLighting,
         campingChecklists: [],
         quickNotes: ''
       })
     }),
     {
-      name: 'vehicle-storage-v10',
+      name: 'vehicle-storage-v11',
       partialize: (state) => ({
         info: state.info,
         services: state.services,
         tyres: state.tyres,
         repairs: state.repairs,
         reminders: state.reminders,
+        lighting: state.lighting,
         campingChecklists: state.campingChecklists,
         quickNotes: state.quickNotes
       }),
