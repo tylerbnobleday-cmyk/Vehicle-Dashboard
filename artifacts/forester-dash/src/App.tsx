@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 
 import { BottomNav } from "@/components/BottomNav";
+import { SpotifyBubble } from "@/components/SpotifyBubble";
 import { AlertSystem } from "@/components/AlertSystem";
 import Dashboard from "@/pages/Dashboard";
 import Vehicle from "@/pages/Vehicle";
@@ -47,6 +48,7 @@ function App() {
           <AlertSystem />
           <div className="min-h-[100dvh] bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
             <Router />
+            <SpotifyBubble />
             <BottomNav />
           </div>
         </WouterRouter>

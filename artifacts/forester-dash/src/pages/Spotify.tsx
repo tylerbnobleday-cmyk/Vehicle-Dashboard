@@ -66,34 +66,19 @@ export default function Spotify() {
   const [refreshToken, setRefreshToken] = useState(() => localStorage.getItem("spotify_refresh_token") || "");
   const [playback, setPlayback] = useState<PlaybackState | null>(null);
   const [loading, setLoading] = useState(false);
+  const [restoringSession, setRestoringSession] = useState(false);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(50);
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const isTokenValid = accessToken && Date.now() < tokenExpiry - 30000;
-
-  const spotifyFetch = useCallback(async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem("spotify_access_token");
-    const resp = await fetch(`https://api.spotify.com/v1${url}`, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
-    if (resp.status === 401) {
-      await doRefreshToken();
-      return null;
-    }
-    return resp;
-  }, []);
+  const isTokenValid = Boolean(accessToken && Date.now() < tokenExpiry - 30000);
+  const hasRefreshToken = Boolean(refreshToken || localStorage.getItem("spotify_refresh_token"));
 
   const doRefreshToken = useCallback(async () => {
     const storedRefresh = localStorage.getItem("spotify_refresh_token");
-    const storedClientId = localStorage.getItem("spotify_client_id");
-    if (!storedRefresh || !storedClientId) return;
+    const storedClientId = localStorage.getItem("spotify_client_id") || SPOTIFY_CLIENT_ID;
+    if (!storedRefresh || !storedClientId) return false;
     const resp = await fetch("https://accounts.spotify.com/api/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -114,8 +99,38 @@ export default function Spotify() {
       }
       setAccessToken(data.access_token);
       setTokenExpiry(expiry);
+      setError("");
+      return true;
     }
+    ["spotify_access_token", "spotify_token_expiry", "spotify_refresh_token"].forEach(k => localStorage.removeItem(k));
+    setAccessToken("");
+    setTokenExpiry(0);
+    setRefreshToken("");
+    setError("Spotify link expired. Connect once again to relink this device.");
+    return false;
   }, []);
+
+  const spotifyFetch = useCallback(async (url: string, options: RequestInit = {}) => {
+    let token = localStorage.getItem("spotify_access_token");
+    if (!token || Date.now() >= Number(localStorage.getItem("spotify_token_expiry") || 0) - 30000) {
+      const refreshed = await doRefreshToken();
+      if (!refreshed) return null;
+      token = localStorage.getItem("spotify_access_token");
+    }
+    const resp = await fetch(`https://api.spotify.com/v1${url}`, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+    if (resp.status === 401) {
+      const refreshed = await doRefreshToken();
+      return refreshed ? spotifyFetch(url, options) : null;
+    }
+    return resp;
+  }, [doRefreshToken]);
 
   const fetchPlayback = useCallback(async () => {
     if (!isTokenValid) return;
@@ -141,6 +156,12 @@ export default function Spotify() {
     const interval = setInterval(fetchPlayback, 5000);
     return () => clearInterval(interval);
   }, [isTokenValid, fetchPlayback]);
+
+  useEffect(() => {
+    if (isTokenValid || !hasRefreshToken || restoringSession) return;
+    setRestoringSession(true);
+    doRefreshToken().finally(() => setRestoringSession(false));
+  }, [isTokenValid, hasRefreshToken, restoringSession, doRefreshToken]);
 
   useEffect(() => {
     if (progressRef.current) clearInterval(progressRef.current);
@@ -217,7 +238,7 @@ export default function Spotify() {
 
   const handleDisconnect = () => {
     ["spotify_access_token", "spotify_token_expiry", "spotify_refresh_token"].forEach(k => localStorage.removeItem(k));
-    setAccessToken(""); setTokenExpiry(0); setRefreshToken(""); setPlayback(null);
+    setAccessToken(""); setTokenExpiry(0); setRefreshToken(""); setPlayback(null); setError("");
   };
 
   const playerAction = async (endpoint: string, method = "POST", body?: object) => {
@@ -256,10 +277,10 @@ export default function Spotify() {
 
           <Card className="border-border/50 bg-card/60 backdrop-blur">
             <CardContent className="p-6 space-y-5">
-              {loading ? (
+              {loading || restoringSession ? (
                 <div className="flex flex-col items-center gap-4 py-6">
                   <Loader2 className="w-10 h-10 animate-spin text-[#1DB954]" />
-                  <p className="text-muted-foreground">Connecting to Spotify…</p>
+                  <p className="text-muted-foreground">{restoringSession ? "Restoring Spotify link..." : "Connecting to Spotify..."}</p>
                 </div>
               ) : (
                 <>
@@ -287,7 +308,7 @@ export default function Spotify() {
                   </Button>
 
                   <div className="border border-border/40 rounded-xl p-4 space-y-3 bg-muted/20">
-                    <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Setup (one-time)</p>
+                    <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Setup once, then it stays linked</p>
                     <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
                       <li>Go to <span className="text-primary font-mono text-xs">developer.spotify.com/dashboard</span></li>
                       <li>Create an app (name anything)</li>
