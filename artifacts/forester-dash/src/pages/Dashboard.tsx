@@ -241,7 +241,7 @@ export default function Dashboard() {
                   </div>
                 ))}
                 <p className="text-xs text-muted-foreground pt-1">
-                  Last: JAX Tyres oil pressure switch — 2 Jun 2026 @ 160,424 km
+                  Last: JAX tyres fitted — 23 Jun 2026 @ 163,278 km
                 </p>
               </div>
             ) : (

@@ -136,47 +136,47 @@ const defaultInfo: VehicleInfo = {
   insurancePolicyNumber: 'MOT 815 262 759',
   insurancePeriod: '21 May 2026 – 21 May 2027',
   insuranceType: 'Third Party Fire & Theft',
-  odometer: 163275,
+  odometer: 163278,
   photoUrl: '',
 };
 
 const defaultTyres: TyreRecord[] = [
   {
-    id: '1', position: 'FL', brand: 'Spare fitted', pressure: 33, targetPressure: 33,
-    condition: 'Good', installDate: '', notes: 'Spare wheel is currently fitted on the front left.'
+    id: '1', position: 'FL', brand: 'Wanli Harmonic Plus SP026 215/65R16 98V', pressure: 33, targetPressure: 33,
+    condition: 'Excellent', installDate: new Date('2026-06-23').toISOString(), notes: 'New tyre fitted by JAX Tyres & Auto Caulfield South. Invoice 77598 / work order 061491.'
   },
   {
     id: '2', position: 'FR', brand: 'Unknown', pressure: 33, targetPressure: 33,
     condition: 'Good', installDate: '', notes: 'Checked about one month ago and confirmed OK.'
   },
   {
-    id: '3', position: 'RL', brand: 'Unknown', pressure: 33, targetPressure: 33,
-    condition: 'Replace', installDate: '', notes: 'Severely worn/bald. Pressure is OK, but tyre requires immediate replacement. Booked at JAX Tyres & Auto Caulfield South on 23 Jun 2026 at 10:00 AM.'
+    id: '3', position: 'RL', brand: 'Wanli Harmonic Plus SP026 215/65R16 98V', pressure: 33, targetPressure: 33,
+    condition: 'Excellent', installDate: new Date('2026-06-23').toISOString(), notes: 'New tyre fitted by JAX Tyres & Auto Caulfield South. Invoice 77598 / work order 061491.'
   },
   {
-    id: '4', position: 'RR', brand: 'Unknown', pressure: 33, targetPressure: 33,
-    condition: 'Replace', installDate: '', notes: 'Severely worn/bald. Pressure is OK, but tyre requires immediate replacement. Booked at JAX Tyres & Auto Caulfield South on 23 Jun 2026 at 10:00 AM.'
+    id: '4', position: 'RR', brand: 'Wanli Harmonic Plus SP026 215/65R16 98V', pressure: 33, targetPressure: 33,
+    condition: 'Excellent', installDate: new Date('2026-06-23').toISOString(), notes: 'New tyre fitted by JAX Tyres & Auto Caulfield South. Invoice 77598 / work order 061491.'
   },
   {
-    id: '5', position: 'Spare', brand: 'Blown front-left tyre', pressure: 0, targetPressure: 33,
-    condition: 'Replace', installDate: '', notes: 'Original front-left tyre is blown and stored in the boot. Replace before using as a spare.'
+    id: '5', position: 'Spare', brand: 'Spare status to confirm', pressure: 0, targetPressure: 33,
+    condition: 'Replace', installDate: '', notes: 'Three old tyres were disposed through JAX waste tyre management on 23 Jun 2026. Confirm whether a usable spare is now in the boot.'
   },
 ];
 
 const defaultRepairs: RepairRecord[] = [
   {
-    id: 'r1', title: 'Front Left Tyre - Replace Blown Tyre', priority: 'High', status: 'Not Started',
-    notes: 'Spare is currently fitted on the front left. Original front-left tyre is blown and stored in the boot. Include this in the 23 Jun 2026 JAX booking so three tyres are replaced, not two. Planned tyre model: Key Transmate WZD105.',
+    id: 'r1', title: 'Front Left Tyre - Replace Blown Tyre', priority: 'High', status: 'Completed',
+    notes: 'Completed at JAX Tyres & Auto Caulfield South on 23 Jun 2026 as part of three-tyre replacement. Invoice 77598 / work order 061491.',
     dateCreated: new Date('2026-06-01').toISOString()
   },
   {
-    id: 'r2', title: 'Tyres - Replace Three at JAX', priority: 'Critical', status: 'Booked',
-    notes: 'Rear tyres are severely worn/bald and require immediate replacement. Appointment booked at JAX Tyres & Auto Caulfield South for 23 Jun 2026 at 10:00 AM. Planned work: replace three tyres using Key Transmate WZD105. After appointment, create service record and mark tyre replacement completed once confirmed.',
+    id: 'r2', title: 'Tyres - Replace Three at JAX', priority: 'Critical', status: 'Completed',
+    notes: 'Completed at JAX Tyres & Auto Caulfield South on 23 Jun 2026. Three Wanli Harmonic Plus SP026 215/65R16 98V tyres fitted, balanced, with tubeless valves and waste tyre management. Invoice 77598 / work order 061491. Total paid $417.00.',
     dateCreated: new Date('2026-06-22').toISOString()
   },
   {
-    id: 'r3', title: 'Check Engine Light - JAX Diagnosis', priority: 'High', status: 'Booked',
-    notes: 'Existing CEL remains unresolved. Oil pressure switch was replaced by JAX on 2 Jun 2026 at 160,424 km, but CEL remained after repair. Vehicle occasionally hesitates under acceleration/high RPM and same fault has returned. At 23 Jun 2026 JAX appointment, request full diagnostic scan, exact fault code(s), written diagnosis, and repair quote if additional work is required.',
+    id: 'r3', title: 'Check Engine Light - Needs Diagnosis', priority: 'High', status: 'Not Started',
+    notes: 'Existing CEL remains unresolved. Oil pressure switch was replaced by JAX on 2 Jun 2026 at 160,424 km, but CEL remained after repair. Vehicle occasionally hesitates under acceleration/high RPM and same fault has returned. JAX invoice 77598 on 23 Jun 2026 shows tyre work only, with no diagnostic scan or fault codes recorded.',
     dateCreated: new Date('2026-06-02').toISOString()
   },
   {
@@ -201,7 +201,7 @@ const defaultRepairs: RepairRecord[] = [
   },
   {
     id: 'r9', title: '162,000 km Full Service', priority: 'High', status: 'Not Started',
-    notes: 'Service remains overdue. Current odometer is 163,275 km, approximately 1,275 km past the 162,000 km service interval. Full service still required: inspect engine oil condition, oil filter, air filter, cabin filter, spark plugs, and general vehicle health. Oil pressure switch was replaced at JAX Tyres on 2 Jun 2026, but this did not complete the scheduled service.',
+    notes: 'Service remains overdue. Current odometer is 163,278 km, approximately 1,278 km past the 162,000 km service interval. Full service still required: inspect engine oil condition, oil filter, air filter, cabin filter, spark plugs, and general vehicle health. Oil pressure switch was replaced at JAX Tyres on 2 Jun 2026, but this did not complete the scheduled service.',
     dateCreated: new Date('2026-06-01').toISOString()
   },
 ];
@@ -308,9 +308,14 @@ const defaultServices: ServiceRecord[] = [
     status: 'OK', notes: ''
   },
   {
+    id: 's23', type: 'Three Tyres Fitted', provider: 'JAX Tyres & Auto Caulfield South',
+    date: new Date('2026-06-23T12:11:00').toISOString(), odometer: 163278,
+    status: 'OK', notes: 'Tax invoice 77598 / work order 061491. Fitted 3x Wanli Harmonic Plus SP026 215/65R16 98V tyres. Included balancing, tubeless valves, and waste tyre management. Paid $417.00 including GST $37.91.'
+  },
+  {
     id: 's20', type: '162,000 km Service', provider: '',
-    date: new Date('2026-06-22').toISOString(), odometer: 163275,
-    status: 'OVERDUE', notes: 'Next scheduled service. Not yet completed — oil filter replaced separately at JAX Tyres 2 Jun 2026, but full service (oil, spark plugs, filters) still required.'
+    date: new Date('2026-06-23').toISOString(), odometer: 163278,
+    status: 'OVERDUE', notes: 'Scheduled service remains overdue at 163,278 km. Tyres were completed separately at JAX on 23 Jun 2026, but full service still needs engine oil condition, oil filter, air filter, cabin filter, spark plugs, and general vehicle health check.'
   },
   {
     id: 's21', type: 'Oil Filter Replacement', provider: 'JAX Tyres',
@@ -337,11 +342,11 @@ const defaultReminders: ReminderRecord[] = [
   },
   {
     id: 'rm3', title: 'Replace Rear Tyres', type: 'Tyre',
-    dueDate: new Date('2026-06-23T10:00:00').toISOString(), notes: 'JAX Tyres & Auto Caulfield South booking at 10:00 AM. Replace three tyres, not two. Planned tyre model: Key Transmate WZD105. Rear tyres are severely worn/bald; confirm completion after appointment.', recurring: false, status: 'Due Soon'
+    dueDate: new Date('2026-06-23T10:00:00').toISOString(), notes: 'Completed 23 Jun 2026 at JAX Tyres & Auto Caulfield South. See invoice 77598 / service record.', recurring: false, status: 'Completed'
   },
   {
     id: 'rm7', title: 'Replace Blown Front-Left Tyre', type: 'Tyre',
-    dueDate: new Date('2026-06-23T10:00:00').toISOString(), notes: 'Spare is fitted on the front left. Blown original front-left tyre is in the boot. Include this as part of the three-tyre JAX replacement booking.', recurring: false, status: 'Due Soon'
+    dueDate: new Date('2026-06-23T10:00:00').toISOString(), notes: 'Completed 23 Jun 2026 at JAX Tyres & Auto Caulfield South as part of three-tyre replacement. Confirm spare status separately.', recurring: false, status: 'Completed'
   },
   {
     id: 'rm4', title: 'Next Oil Change', type: 'Oil',
@@ -349,11 +354,11 @@ const defaultReminders: ReminderRecord[] = [
   },
   {
     id: 'rm5', title: 'JAX Diagnostic Scan - CEL', type: 'Custom',
-    dueDate: new Date('2026-06-23T10:00:00').toISOString(), notes: 'Ask JAX for full diagnostic scan, exact fault code(s), written diagnosis, and repair quote. CEL remains after 2 Jun 2026 oil pressure switch replacement; vehicle sometimes hesitates under acceleration/high RPM.', recurring: false, status: 'Due Soon'
+    dueDate: '', notes: 'Still required. JAX invoice 77598 on 23 Jun 2026 shows tyre work only, with no diagnostic scan or fault codes recorded. Ask for full OBD scan, exact fault code(s), written diagnosis, and repair quote.', recurring: false, status: 'Due Soon'
   },
   {
     id: 'rm8', title: 'Schedule 162,000 km Service', type: 'Service',
-    dueDate: '', dueOdometer: 162000, notes: 'Current odometer 163,275 km as of 22 Jun 2026, about 1,275 km overdue. Full service still needed: engine oil condition, oil filter, air filter, cabin filter, spark plugs, and general health check.', recurring: false, status: 'Due Soon'
+    dueDate: '', dueOdometer: 162000, notes: 'Current odometer 163,278 km as of 23 Jun 2026, about 1,278 km overdue. Full service still needed: engine oil condition, oil filter, air filter, cabin filter, spark plugs, and general health check.', recurring: false, status: 'Due Soon'
   },
   {
     id: 'rm6', title: 'Next Camping Trip', type: 'Camping',
@@ -415,7 +420,7 @@ export const useVehicleStore = create<VehicleState>()(
       })
     }),
     {
-      name: 'vehicle-storage-v7',
+      name: 'vehicle-storage-v8',
       partialize: (state) => ({
         info: state.info,
         services: state.services,
