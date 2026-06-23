@@ -158,8 +158,8 @@ const defaultTyres: TyreRecord[] = [
     condition: 'Excellent', installDate: new Date('2026-06-23').toISOString(), notes: 'New tyre fitted by JAX Tyres & Auto Caulfield South. Invoice 77598 / work order 061491.'
   },
   {
-    id: '5', position: 'Spare', brand: 'Factory spare in boot', pressure: 0, targetPressure: 33,
-    condition: 'Fair', installDate: '', notes: 'Spare tyre confirmed present in the boot/spare wheel well on 23 Jun 2026. Pressure and roadworthiness still need to be checked manually.'
+    id: '5', position: 'Spare', brand: 'Factory spare in boot', pressure: 33, targetPressure: 33,
+    condition: 'Good', installDate: '', notes: 'Spare tyre confirmed present in the boot/spare wheel well on 23 Jun 2026. Roadworthy with adequate pressure.'
   },
 ];
 
@@ -361,10 +361,6 @@ const defaultReminders: ReminderRecord[] = [
     dueDate: '', dueOdometer: 162000, notes: 'Current odometer 163,278 km as of 23 Jun 2026, about 1,278 km overdue. Full service still needed: engine oil condition, oil filter, air filter, cabin filter, spark plugs, and general health check.', recurring: false, status: 'Due Soon'
   },
   {
-    id: 'rm9', title: 'Check Spare Tyre Pressure', type: 'Tyre',
-    dueDate: '', notes: 'Spare tyre is present in the boot/spare wheel well, but pressure and tread/sidewall condition still need to be checked manually. Target pressure: 33 psi.', recurring: false, status: 'Due Soon'
-  },
-  {
     id: 'rm6', title: 'Next Camping Trip', type: 'Camping',
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     notes: 'Grampians trip', recurring: false, status: 'Due Soon'
@@ -424,7 +420,7 @@ export const useVehicleStore = create<VehicleState>()(
       })
     }),
     {
-      name: 'vehicle-storage-v9',
+      name: 'vehicle-storage-v10',
       partialize: (state) => ({
         info: state.info,
         services: state.services,
