@@ -173,51 +173,6 @@ export default function Spotify() {
     return () => { if (progressRef.current) clearInterval(progressRef.current); };
   }, [playback?.is_playing, playback?.item?.id]);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    const storedVerifier = sessionStorage.getItem("spotify_verifier");
-    const storedClientId = localStorage.getItem("spotify_client_id");
-    if (code && storedVerifier && storedClientId) {
-      window.history.replaceState({}, "", window.location.pathname);
-      exchangeCode(code, storedVerifier, storedClientId);
-    }
-  }, []);
-
-  const exchangeCode = async (code: string, verifier: string, cid: string) => {
-    setLoading(true);
-    try {
-      const resp = await fetch("https://accounts.spotify.com/api/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          grant_type: "authorization_code",
-          code,
-          redirect_uri: REDIRECT_URI,
-          client_id: cid,
-          code_verifier: verifier,
-        }),
-      });
-      const data = await resp.json();
-      if (data.access_token) {
-        const expiry = Date.now() + data.expires_in * 1000;
-        localStorage.setItem("spotify_access_token", data.access_token);
-        localStorage.setItem("spotify_token_expiry", String(expiry));
-        localStorage.setItem("spotify_refresh_token", data.refresh_token || "");
-        setAccessToken(data.access_token);
-        setTokenExpiry(expiry);
-        setRefreshToken(data.refresh_token || "");
-        sessionStorage.removeItem("spotify_verifier");
-      } else {
-        setError(data.error_description || "Auth failed. Check your Client ID and Redirect URI.");
-      }
-    } catch {
-      setError("Network error during authentication.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleConnect = async () => {
     if (!clientIdInput.trim()) { setError("Enter your Spotify Client ID first."); return; }
     const cid = clientIdInput.trim();
