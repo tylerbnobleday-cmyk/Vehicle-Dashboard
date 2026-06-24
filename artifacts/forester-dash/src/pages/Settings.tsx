@@ -25,7 +25,7 @@ export default function Settings() {
   };
 
   const handleExport = () => {
-    const dataStr = localStorage.getItem('vehicle-storage-v13');
+    const dataStr = localStorage.getItem('vehicle-storage-v14');
     if (!dataStr) return;
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     const exportFileDefaultName = `forester-dash-backup-${new Date().toISOString().slice(0,10)}.json`;
@@ -44,7 +44,7 @@ export default function Settings() {
       try {
         const obj = JSON.parse(event.target?.result as string);
         if (obj && obj.state) {
-          localStorage.setItem('vehicle-storage-v13', event.target?.result as string);
+          localStorage.setItem('vehicle-storage-v14', event.target?.result as string);
           toast({ title: 'Backup restored. Reloading app...' });
           setTimeout(() => window.location.reload(), 1500);
         } else {

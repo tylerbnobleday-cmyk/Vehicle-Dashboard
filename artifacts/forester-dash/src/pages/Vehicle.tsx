@@ -1,7 +1,19 @@
-import { useState } from "react";
-import { format } from "date-fns";
-import { CalendarDays, CircleDashed, Gauge, Settings, TriangleAlert, Wrench } from "lucide-react";
-import { useVehicleStore, TyreRecord } from "@/store/vehicleStore";
+import { useEffect, useState } from "react";
+import { format, formatDistanceToNowStrict } from "date-fns";
+import {
+  Car,
+  CheckCircle2,
+  CircleDashed,
+  CircleDot,
+  Gauge,
+  MapPin,
+  Settings,
+  ShieldCheck,
+  Thermometer,
+  TriangleAlert,
+  Wrench,
+} from "lucide-react";
+import { useVehicleStore, TyreRecord, ServiceRecord, RepairRecord, ReminderRecord } from "@/store/vehicleStore";
 import { VehicleApi } from "@/services/vehicleApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -9,6 +21,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import foresterHero from "@/assets/forester-hero.png";
 import foresterTopdown from "@/assets/forester-topdown.png";
 
 const TYRE_BADGE_POSITION: Record<TyreRecord["position"], string> = {
@@ -17,6 +31,14 @@ const TYRE_BADGE_POSITION: Record<TyreRecord["position"], string> = {
   RL: "left-1 top-[68%]",
   RR: "right-1 top-[68%]",
   Spare: "left-1/2 bottom-2 -translate-x-1/2",
+};
+
+const TYRE_CONDITION_COLOR: Record<string, string> = {
+  Excellent: "text-green-400",
+  Good: "text-green-400",
+  Fair: "text-amber-400",
+  Poor: "text-orange-400",
+  Replace: "text-red-500",
 };
 
 function pressureColor(pressure: number, target: number) {
@@ -42,6 +64,43 @@ function formatInstallDate(installDate: string) {
   return format(date, "MMM yyyy");
 }
 
+function computeHealthScore(
+  tyres: TyreRecord[],
+  services: ServiceRecord[],
+  repairs: RepairRecord[],
+): { score: number; label: string; color: string; bgColor: string } {
+  let score = 100;
+  score -= tyres.filter((tyre) => tyre.condition === "Replace").length * 25;
+  if (services.some((service) => service.status === "OVERDUE")) score -= 15;
+  if (repairs.some((repair) =>
+    repair.title.toLowerCase().includes("p0028") ||
+    repair.title.toLowerCase().includes("engine light") ||
+    repair.notes.toLowerCase().includes("pending dtc") ||
+    repair.notes.toLowerCase().includes("p0028") ||
+    repair.notes.toLowerCase().includes("check engine")
+  )) score -= 10;
+  score -= repairs.filter((repair) => repair.status !== "Completed").length * 5;
+  score = Math.max(0, score);
+
+  if (score >= 80) return { score, label: "Excellent", color: "text-green-400", bgColor: "bg-green-500/10 border-green-500/30" };
+  if (score >= 60) return { score, label: "Good", color: "text-blue-400", bgColor: "bg-blue-500/10 border-blue-500/30" };
+  if (score >= 40) return { score, label: "Fair", color: "text-amber-400", bgColor: "bg-amber-500/10 border-amber-500/30" };
+  if (score >= 20) return { score, label: "Needs Attention", color: "text-orange-400", bgColor: "bg-orange-500/10 border-orange-500/30" };
+  return { score, label: "Unsafe", color: "text-red-400", bgColor: "bg-red-500/10 border-red-500/30" };
+}
+
+function reminderLabel(reminder: ReminderRecord) {
+  if ((reminder.type === "Rego" || reminder.type === "Insurance") && reminder.dueDate) {
+    const due = new Date(reminder.dueDate);
+    if (!Number.isNaN(due.getTime())) {
+      const distance = formatDistanceToNowStrict(due, { addSuffix: false });
+      return due.getTime() >= Date.now() ? `Expires in ${distance}` : `Expired ${distance} ago`;
+    }
+  }
+  if (reminder.dueOdometer) return `${reminder.dueOdometer.toLocaleString()} km`;
+  return reminder.status;
+}
+
 function TyreBadge({ tyre, onEdit }: { tyre: TyreRecord; onEdit: (tyre: TyreRecord) => void }) {
   return (
     <button
@@ -63,16 +122,58 @@ export default function Vehicle() {
   const tyres = useVehicleStore((state) => state.tyres);
   const services = useVehicleStore((state) => state.services);
   const repairs = useVehicleStore((state) => state.repairs);
+  const reminders = useVehicleStore((state) => state.reminders);
+  const quickNotes = useVehicleStore((state) => state.quickNotes);
   const updateInfo = useVehicleStore((state) => state.updateInfo);
   const updateTyre = useVehicleStore((state) => state.updateTyre);
+  const updateQuickNotes = useVehicleStore((state) => state.updateQuickNotes);
+
   const [editingTyre, setEditingTyre] = useState<TyreRecord | null>(null);
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const overdueServices = services.filter((service) => service.status === "OVERDUE");
   const openRepairs = repairs.filter((repair) => repair.status !== "Completed");
+  const criticalRepairs = openRepairs.filter((repair) => repair.priority === "Critical");
   const tyreWarnings = tyres.filter((tyre) => tyre.condition === "Replace" || tyre.condition === "Poor").length;
+  const health = computeHealthScore(tyres, services, repairs);
   const latestService = [...services]
     .filter((service) => service.status === "OK")
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+  const activeReminders = [...reminders]
+    .filter((reminder) => reminder.status !== "Completed")
+    .sort((a, b) => {
+      if (a.type === "Service" && b.type !== "Service") return -1;
+      if (b.type === "Service" && a.type !== "Service") return 1;
+      if (a.dueDate && b.dueDate) return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      if (a.dueDate) return -1;
+      if (b.dueDate) return 1;
+      return 0;
+    });
+
+  const outsideTemp = sensorData.outsideTemp === null ? "--" : sensorData.outsideTemp.toFixed(1);
+  const locationText =
+    sensorData.latitude !== null && sensorData.longitude !== null
+      ? `${sensorData.latitude.toFixed(4)}, ${sensorData.longitude.toFixed(4)}`
+      : sensorData.locationStatus === "denied"
+        ? "Permission denied"
+        : sensorData.locationStatus === "requesting"
+          ? "Requesting..."
+          : sensorData.locationStatus === "disabled"
+            ? "Not car tablet"
+            : "No location";
+
+  const estimatedKmToAdd = Math.round(sensorData.estimatedDistanceKm);
+
+  const handleApplyEstimatedKm = () => {
+    if (estimatedKmToAdd <= 0) return;
+    updateInfo({ odometer: info.odometer + estimatedKmToAdd });
+    VehicleApi.resetEstimatedDistance();
+  };
 
   const handleSaveTyre = () => {
     if (!editingTyre) return;
@@ -80,18 +181,26 @@ export default function Vehicle() {
     setEditingTyre(null);
   };
 
-  const estimatedKmToAdd = Math.round(sensorData.estimatedDistanceKm);
-  const handleApplyEstimatedKm = () => {
-    if (estimatedKmToAdd <= 0) return;
-    updateInfo({ odometer: info.odometer + estimatedKmToAdd });
-    VehicleApi.resetEstimatedDistance();
-  };
-
   return (
-    <div className="min-h-[calc(100dvh-6rem)] p-4 md:p-6 space-y-4 max-w-7xl mx-auto pb-32">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">Vehicle</h1>
-        <p className="text-sm text-muted-foreground">{info.name} · {info.registration}</p>
+    <div className="min-h-[calc(100dvh-6rem)] p-4 md:p-6 space-y-5 max-w-7xl mx-auto pb-32 animate-in fade-in duration-500">
+      <div className="relative min-h-[112px] overflow-hidden rounded-2xl border border-border/30 bg-card/40">
+        <img src={foresterHero} alt="Steamy" className="absolute inset-0 h-full w-full object-cover opacity-25" draggable={false} />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/96 via-background/65 to-background/15" />
+        <div className="relative flex items-center justify-between gap-4 p-5">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-primary">{info.nickname || info.name}</h1>
+              <span className="rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 font-mono text-sm font-bold text-primary">
+                {info.registration}
+              </span>
+            </div>
+            <p className="mt-0.5 text-base text-muted-foreground">{info.name} - {info.odometer.toLocaleString()} km</p>
+          </div>
+          <div className="shrink-0 text-right">
+            <div className="font-mono text-4xl md:text-5xl font-bold tracking-tighter">{format(time, "HH:mm")}</div>
+            <div className="text-sm uppercase tracking-widest text-muted-foreground">{format(time, "EEE, d MMM")}</div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
@@ -100,7 +209,15 @@ export default function Vehicle() {
             <Gauge className="w-5 h-5 text-primary mb-2" />
             <p className="text-xs uppercase tracking-widest text-muted-foreground">Odometer</p>
             <p className="text-2xl font-mono font-bold">{info.odometer.toLocaleString()} km</p>
-            <p className="text-[11px] text-muted-foreground mt-1">Manual record, not live tracked</p>
+            <p className="text-[11px] text-muted-foreground mt-1">Manual record</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card/40 border-border/50">
+          <CardContent className="p-4">
+            <Thermometer className="w-5 h-5 text-primary mb-2" />
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">Outside</p>
+            <p className="text-2xl font-mono font-bold">{outsideTemp} C</p>
+            <p className="text-[11px] text-muted-foreground mt-1 truncate">{locationText}</p>
           </CardContent>
         </Card>
         <Card className="bg-card/40 border-border/50">
@@ -114,25 +231,15 @@ export default function Vehicle() {
               disabled={estimatedKmToAdd <= 0}
               className="mt-2 h-8 rounded-md border border-border/50 px-2 text-xs font-semibold text-primary disabled:text-muted-foreground disabled:opacity-50"
             >
-              Add {estimatedKmToAdd} km to odo
+              Add {estimatedKmToAdd} km
             </button>
           </CardContent>
         </Card>
         <Card className="bg-card/40 border-border/50">
           <CardContent className="p-4">
-            <CalendarDays className="w-5 h-5 text-primary mb-2" />
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">Rego</p>
-            <p className="text-2xl font-mono font-bold">{info.registration}</p>
-            <p className="text-[11px] text-muted-foreground mt-1">Expires 11 Nov 2026</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card/40 border-border/50">
-          <CardContent className="p-4">
             <Wrench className="w-5 h-5 text-amber-400 mb-2" />
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">Service</p>
-            <p className={`text-xl font-bold ${overdueServices.length ? "text-amber-400" : "text-green-400"}`}>
-              {overdueServices.length ? "Overdue" : "Current"}
-            </p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">162,000 km Service</p>
+            <p className="text-xl font-bold text-amber-400">Upcoming</p>
             <p className="text-[11px] text-muted-foreground mt-1 truncate">{latestService?.type || "No service record"}</p>
           </CardContent>
         </Card>
@@ -146,12 +253,176 @@ export default function Vehicle() {
         </Card>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className={`border ${health.bgColor} backdrop-blur`}>
+          <CardHeader className="pb-2 border-b border-border/20">
+            <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <Car className="w-4 h-4" /> Vehicle Health
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 flex items-center gap-5">
+            <div className="relative h-20 w-20 shrink-0">
+              <svg viewBox="0 0 80 80" className="h-full w-full -rotate-90">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="currentColor" strokeWidth="8" className="text-border/30" />
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="34"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  strokeDasharray={`${(health.score / 100) * 213.6} 213.6`}
+                  strokeLinecap="round"
+                  className={health.color}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className={`font-mono text-xl font-black ${health.color}`}>{health.score}</span>
+              </div>
+            </div>
+            <div>
+              <p className={`text-2xl font-bold ${health.color}`}>{health.label}</p>
+              <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
+                {tyreWarnings > 0 && <p className="text-red-400">- {tyreWarnings} tyre warning(s)</p>}
+                {overdueServices.length > 0 && <p className="text-amber-400">- 162,000 km service needs booking</p>}
+                <p>- {openRepairs.length} open repair(s)</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 bg-card/40 backdrop-blur">
+          <CardHeader className="pb-2 border-b border-border/20">
+            <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <CircleDot className="w-4 h-4" /> Tyre Health
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-3 grid grid-cols-2 gap-2">
+            {tyres.filter((tyre) => tyre.position !== "Spare").map((tyre) => (
+              <div key={tyre.id} className="flex items-center justify-between rounded-lg border border-border/30 bg-card/40 px-3 py-2">
+                <span className="text-xs font-semibold text-muted-foreground">{tyre.position}</span>
+                <span className={`text-xs font-black uppercase ${TYRE_CONDITION_COLOR[tyre.condition]}`}>
+                  {tyre.condition === "Replace" ? "Danger" : tyre.condition}
+                </span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-border/50 bg-card/40 backdrop-blur">
+          <CardHeader className="pb-2 border-b border-border/20">
+            <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <Wrench className="w-4 h-4" /> Service
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-3">
+            {overdueServices.length > 0 ? (
+              <div className="space-y-2">
+                {overdueServices.map((service) => (
+                  <div key={service.id} className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2">
+                    <span className="text-sm font-semibold">{service.type}</span>
+                    <StatusBadge status="OVERDUE" />
+                  </div>
+                ))}
+                <p className="text-xs text-muted-foreground pt-1">Last: JAX tyres fitted - 23 Jun 2026 @ 163,278 km</p>
+              </div>
+            ) : (
+              <div className="flex items-center text-green-400">
+                <CheckCircle2 className="w-5 h-5 mr-2" />
+                <span className="text-sm font-bold">All services up to date</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 bg-card/40 backdrop-blur">
+          <CardHeader className="pb-2 border-b border-border/20">
+            <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <TriangleAlert className="w-4 h-4" /> Active Repairs
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-3 space-y-3">
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Critical</span>
+              <span className="font-mono text-lg font-bold text-red-400">{criticalRepairs.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">High</span>
+              <span className="font-mono text-lg font-bold text-orange-400">{openRepairs.filter((repair) => repair.priority === "High").length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Total Open</span>
+              <span className="font-mono text-lg font-bold">{openRepairs.length}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 bg-card/40 backdrop-blur">
+          <CardHeader className="pb-2 border-b border-border/20">
+            <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" /> Rego & Insurance
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-3 space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Rego</span>
+              <span className="text-sm font-bold">{info.registrationExpiry}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Provider</span>
+              <span className="text-sm font-bold">{info.insuranceProvider}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Type</span>
+              <span className="text-sm font-semibold text-amber-400">{info.insuranceType}</span>
+            </div>
+            <div className="pt-1 border-t border-border/20">
+              <p className="text-xs text-muted-foreground">{info.insurancePeriod}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="border-border/50 bg-card/40 backdrop-blur">
+          <CardHeader className="pb-2 border-b border-border/20">
+            <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground">Commander Notes</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-3">
+            <Textarea
+              value={quickNotes}
+              onChange={(event) => updateQuickNotes(event.target.value)}
+              placeholder="Quick notes..."
+              className="min-h-[112px] resize-none bg-background/50 font-mono text-sm"
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 bg-card/40 backdrop-blur">
+          <CardHeader className="pb-2 border-b border-border/20">
+            <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground">Upcoming</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-3 space-y-2">
+            {activeReminders.slice(0, 5).map((reminder) => (
+              <div key={reminder.id} className="flex items-center justify-between gap-3 border-b border-border/10 py-1.5 last:border-0">
+                <span className="truncate text-sm font-semibold">{reminder.title}</span>
+                <span className="shrink-0 rounded-full border border-border/40 bg-background/50 px-2.5 py-1 text-xs font-bold text-muted-foreground">
+                  {reminderLabel(reminder)}
+                </span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
       <Card className="bg-card/35 border-border/50">
         <CardContent className="p-4 text-sm text-muted-foreground">
           GPS odometer assist only counts movement from the trusted car tablet. It is an estimate from location, so the stored odometer changes only when you press the add button.
           <span className="block mt-1 font-mono text-xs">
-            Location: {sensorData.locationStatus}
-            {sensorData.locationAccuracy !== null ? ` · +/- ${Math.round(sensorData.locationAccuracy)} m` : ""}
+            <MapPin className="mr-1 inline h-3.5 w-3.5" /> {sensorData.locationStatus}
+            {sensorData.locationAccuracy !== null ? ` - +/- ${Math.round(sensorData.locationAccuracy)} m` : ""}
           </span>
         </CardContent>
       </Card>

@@ -8,7 +8,6 @@ import NotFound from "@/pages/not-found";
 import { BottomNav } from "@/components/BottomNav";
 import { SpotifyBubble } from "@/components/SpotifyBubble";
 import { AlertSystem } from "@/components/AlertSystem";
-import Dashboard from "@/pages/Dashboard";
 import Vehicle from "@/pages/Vehicle";
 import Service from "@/pages/Service";
 import Repairs from "@/pages/Repairs";
@@ -24,7 +23,7 @@ const queryClient = new QueryClient();
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
+      <Route path="/" component={Vehicle} />
       <Route path="/vehicle" component={Vehicle} />
       <Route path="/service" component={Service} />
       <Route path="/repairs" component={Repairs} />

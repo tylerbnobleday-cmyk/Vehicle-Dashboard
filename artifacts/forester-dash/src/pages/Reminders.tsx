@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { format } from "date-fns";
+import { format, formatDistanceToNowStrict } from "date-fns";
 
 export default function Reminders() {
   const reminders = useVehicleStore(state => state.reminders);
@@ -32,6 +32,17 @@ export default function Reminders() {
     if (status === 'Due Soon') return 'border-amber-500/50 bg-amber-500/5';
     if (status === 'Completed') return 'border-green-500/30 opacity-60';
     return 'border-border/50';
+  };
+
+  const reminderStatusText = (reminder: ReminderRecord) => {
+    if ((reminder.type === 'Rego' || reminder.type === 'Insurance') && reminder.dueDate) {
+      const due = new Date(reminder.dueDate);
+      if (!Number.isNaN(due.getTime())) {
+        const distance = formatDistanceToNowStrict(due, { addSuffix: false });
+        return due.getTime() >= Date.now() ? `Expires in ${distance}` : `Expired ${distance} ago`;
+      }
+    }
+    return reminder.status;
   };
 
   return (
@@ -142,7 +153,13 @@ export default function Reminders() {
               {r.notes && <p className="text-muted-foreground text-sm mb-4">{r.notes}</p>}
               
               <div className="flex justify-between items-center mt-auto pt-4 border-t border-border/20">
-                <StatusBadge status={r.status} />
+                {(r.type === 'Rego' || r.type === 'Insurance') ? (
+                  <span className="rounded-full border border-border/40 bg-background/50 px-2.5 py-1 text-xs font-bold text-muted-foreground">
+                    {reminderStatusText(r)}
+                  </span>
+                ) : (
+                  <StatusBadge status={r.status} />
+                )}
                 {r.recurring && <span className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Recurring</span>}
               </div>
             </CardContent>

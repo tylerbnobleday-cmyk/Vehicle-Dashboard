@@ -1,6 +1,5 @@
 import { Link, useLocation } from "wouter";
 import {
-  Home,
   Car,
   Wrench,
   Hammer,
@@ -12,8 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { path: "/", label: "Dash", icon: Home },
-  { path: "/vehicle", label: "Vehicle", icon: Car },
+  { path: "/", label: "Vehicle", icon: Car },
   { path: "/service", label: "Service", icon: Wrench },
   { path: "/repairs", label: "Repairs", icon: Hammer },
   { path: "/camping", label: "Camping", icon: Tent },

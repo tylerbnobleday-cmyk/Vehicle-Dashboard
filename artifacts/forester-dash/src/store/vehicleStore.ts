@@ -458,8 +458,8 @@ const defaultReminders: ReminderRecord[] = [
     dueDate: '', notes: 'Still required. Owner OBD scan showed pending DTC P0028: Intake Valve Control Solenoid Circuit Range/Performance Bank 2. Check engine light is not currently on, but the fault appears under high RPM/load. Ask mechanic to test Bank 2 OCV/intake valve control solenoid, wiring/connector, oil level/condition, oil passages, and provide written diagnosis plus repair quote.', recurring: false, status: 'Due Soon'
   },
   {
-    id: 'rm8', title: 'Schedule 162,000 km Service', type: 'Service',
-    dueDate: '', dueOdometer: 162000, notes: 'Current odometer 163,278 km as of 23 Jun 2026, about 1,278 km overdue. Full service still needed: engine oil condition, oil filter, air filter, cabin filter, spark plugs, and general health check.', recurring: false, status: 'Due Soon'
+    id: 'rm8', title: 'Upcoming 162,000 km Service', type: 'Service',
+    dueDate: '', dueOdometer: 162000, notes: 'Current odometer 163,278 km as of 23 Jun 2026, about 1,278 km past the 162,000 km service interval. Full service still needed: engine oil condition, oil filter, air filter, cabin filter, spark plugs, and general health check.', recurring: false, status: 'Upcoming'
   },
   {
     id: 'rm6', title: 'Next Camping Trip', type: 'Camping',
@@ -553,7 +553,7 @@ export const useVehicleStore = create<VehicleState>()(
       })
     }),
     {
-      name: 'vehicle-storage-v13',
+      name: 'vehicle-storage-v14',
       partialize: (state) => ({
         info: state.info,
         services: state.services,
