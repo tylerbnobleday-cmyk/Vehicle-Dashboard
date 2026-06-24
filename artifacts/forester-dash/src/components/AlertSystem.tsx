@@ -1,54 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useVehicleStore } from '../store/vehicleStore';
 import { toast } from '@/hooks/use-toast';
 
 export function AlertSystem() {
-  const sensorData = useVehicleStore((state) => state.sensorData);
   const services = useVehicleStore((state) => state.services);
-  
-  const lastAlertsRef = useRef<Record<string, number>>({});
-  
-  useEffect(() => {
-    const checkAlerts = () => {
-      const now = Date.now();
-      const lastAlerts = lastAlertsRef.current;
-      const ALER_COOLDOWN = 60000; // 1 minute between same alert
-      
-      const fireAlert = (id: string, title: string, description: string, variant: 'default' | 'destructive' = 'default') => {
-        if (!lastAlerts[id] || now - lastAlerts[id] > ALER_COOLDOWN) {
-          toast({
-            title,
-            description,
-            variant,
-          });
-          lastAlerts[id] = now;
-          
-          try {
-            if (variant === 'destructive') {
-               // Optional: subtle beep
-               const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU');
-               audio.volume = 0.2;
-               audio.play().catch(e => console.log('Audio play blocked'));
-            }
-          } catch(e) {}
-        }
-      };
-
-      // Doors open while moving
-      if (sensorData.speed > 0) {
-        if (sensorData.driverDoor) fireAlert('door-driver', 'Driver RH Door Open!', 'Vehicle is in motion with door open.', 'destructive');
-        if (sensorData.passengerDoor) fireAlert('door-pass', 'Passenger LH Door Open!', 'Vehicle is in motion with door open.', 'destructive');
-        if (sensorData.rearLeftDoor) fireAlert('door-rl', 'Rear Left Door Open!', 'Vehicle is in motion with door open.', 'destructive');
-        if (sensorData.rearRightDoor) fireAlert('door-rr', 'Rear Right Door Open!', 'Vehicle is in motion with door open.', 'destructive');
-        if (sensorData.boot) fireAlert('door-boot', 'Boot Open!', 'Vehicle is in motion with boot open.', 'destructive');
-        if (sensorData.bonnet) fireAlert('door-bonnet', 'Bonnet Open!', 'Vehicle is in motion with bonnet open.', 'destructive');
-      }
-      
-    };
-
-    const interval = setInterval(checkAlerts, 5000);
-    return () => clearInterval(interval);
-  }, [sensorData]);
 
   // Check service overdue on mount
   useEffect(() => {

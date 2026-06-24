@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  AlertCircle, Thermometer, CheckCircle2,
+  Thermometer, CheckCircle2,
   Wrench, CircleDot, ShieldCheck, Car, TriangleAlert, MapPin
 } from "lucide-react";
 import { format } from "date-fns";
@@ -70,12 +70,6 @@ export default function Dashboard() {
   const criticalRepairs = openRepairs.filter(r => r.priority === 'Critical');
   const health = computeHealthScore(tyres, services, repairs);
 
-  const activeAlerts: string[] = [];
-  if (sensorData.driverDoor || sensorData.passengerDoor || sensorData.rearLeftDoor || sensorData.rearRightDoor)
-    activeAlerts.push("Door Open");
-  if (sensorData.boot) activeAlerts.push("Boot Open");
-  if (sensorData.bonnet) activeAlerts.push("Bonnet Open");
-
   const tyrePosLabel: Record<string, string> = { FL: 'Front L', FR: 'Front R', RL: 'Rear L', RR: 'Rear R', Spare: 'Spare' };
   const outsideTemp = sensorData.outsideTemp === null ? '--' : sensorData.outsideTemp.toFixed(1);
   const hasLocation = sensorData.latitude !== null && sensorData.longitude !== null;
@@ -113,19 +107,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Active sensor alerts */}
-      {activeAlerts.length > 0 && (
-        <div className="flex flex-col gap-2">
-          {activeAlerts.map((alert, i) => (
-            <div key={i} className="bg-destructive/15 border border-destructive/60 text-destructive px-4 py-3 rounded-xl flex items-center gap-3 shadow-[0_0_12px_rgba(239,68,68,0.1)]">
-              <AlertCircle className="w-5 h-5 shrink-0" />
-              <span className="font-bold uppercase tracking-wider">{alert}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Live sensor strip */}
+      {/* Tablet strip */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-4 flex items-center justify-between">
@@ -319,35 +301,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Door Status */}
-      <Card className="border-border/50 bg-card/40 backdrop-blur">
-        <CardHeader className="pb-2 border-b border-border/20">
-          <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-            <Car className="w-4 h-4" /> Door Status
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-3">
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-            {[
-              { label: 'Driver RH', open: sensorData.driverDoor },
-              { label: 'Pass LH', open: sensorData.passengerDoor },
-              { label: 'Rear L', open: sensorData.rearLeftDoor },
-              { label: 'Rear R', open: sensorData.rearRightDoor },
-              { label: 'Boot', open: sensorData.boot },
-              { label: 'Bonnet', open: sensorData.bonnet },
-            ].map(({ label, open }) => (
-              <div key={label} className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-center transition-all duration-300
-                ${open ? 'bg-red-500/10 border-red-500/40' : 'bg-card/30 border-border/30'}`}>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</span>
-                <span className={`text-xs font-black ${open ? 'text-red-400' : 'text-green-400'}`}>
-                  {open ? 'OPEN' : 'Closed'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Bottom row: Notes + Reminders */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

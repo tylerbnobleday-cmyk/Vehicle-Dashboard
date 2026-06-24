@@ -571,4 +571,4 @@ export const useVehicleStore = create<VehicleState>()(
 VehicleApi.subscribe((data) => {
   useVehicleStore.getState().updateSensorData(data);
 });
-VehicleApi.startSimulation();
+VehicleApi.startTracking();

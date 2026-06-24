@@ -1,48 +1,23 @@
 export interface SensorData {
-  speed: number;
-  driverDoor: boolean;
-  passengerDoor: boolean;
-  rearLeftDoor: boolean;
-  rearRightDoor: boolean;
-  boot: boolean;
-  bonnet: boolean;
-  handbrake: boolean;
-  headlights: boolean;
-  parkingLights: boolean;
-  interiorLights: boolean;
-  reverseLight: boolean;
   outsideTemp: number | null;
   latitude: number | null;
   longitude: number | null;
   locationAccuracy: number | null;
   locationStatus: "disabled" | "idle" | "requesting" | "available" | "cached" | "denied" | "unavailable";
-  engineRunning: boolean;
+  estimatedDistanceKm: number;
   timestamp: number;
 }
 
 export const defaultSensorData: SensorData = {
-  speed: 0,
-  driverDoor: false,
-  passengerDoor: false,
-  rearLeftDoor: false,
-  rearRightDoor: false,
-  boot: false,
-  bonnet: false,
-  handbrake: true,
-  headlights: false,
-  parkingLights: false,
-  interiorLights: false,
-  reverseLight: false,
   outsideTemp: null,
   latitude: null,
   longitude: null,
   locationAccuracy: null,
   locationStatus: "disabled",
-  engineRunning: false,
+  estimatedDistanceKm: 0,
   timestamp: Date.now()
 };
 
-let simulationInterval: number | null = null;
 let locationWatchId: number | null = null;
 let lastWeatherFetch = 0;
 type Listener = (data: SensorData) => void;
@@ -53,9 +28,34 @@ let currentData = { ...defaultSensorData };
 const notify = () => listeners.forEach(listener => listener(currentData));
 const TRUSTED_DEVICE_KEY = "forester-dash-trusted-location-device";
 const LAST_LOCATION_KEY = "forester-dash-last-tablet-location";
+const ESTIMATED_DISTANCE_KEY = "forester-dash-estimated-distance-km";
 
 const isTrustedLocationDevice = () =>
   typeof window !== "undefined" && localStorage.getItem(TRUSTED_DEVICE_KEY) === "true";
+
+function loadEstimatedDistance() {
+  if (typeof window === "undefined") return 0;
+  const saved = Number(localStorage.getItem(ESTIMATED_DISTANCE_KEY) || 0);
+  return Number.isFinite(saved) ? saved : 0;
+}
+
+function saveEstimatedDistance(distanceKm: number) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(ESTIMATED_DISTANCE_KEY, String(Math.max(0, distanceKm)));
+}
+
+function distanceKmBetween(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }) {
+  const toRad = (value: number) => value * Math.PI / 180;
+  const earthKm = 6371;
+  const dLat = toRad(b.latitude - a.latitude);
+  const dLon = toRad(b.longitude - a.longitude);
+  const lat1 = toRad(a.latitude);
+  const lat2 = toRad(b.latitude);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return earthKm * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
 
 function loadLastTabletLocation() {
   if (typeof window === "undefined") return null;
@@ -74,6 +74,7 @@ function loadLastTabletLocation() {
       longitude: parsed.longitude,
       locationAccuracy: typeof parsed.locationAccuracy === "number" ? parsed.locationAccuracy : null,
       outsideTemp: typeof parsed.outsideTemp === "number" ? parsed.outsideTemp : null,
+      estimatedDistanceKm: typeof parsed.estimatedDistanceKm === "number" ? parsed.estimatedDistanceKm : loadEstimatedDistance(),
       timestamp: typeof parsed.timestamp === "number" ? parsed.timestamp : Date.now(),
     };
   } catch {
@@ -91,9 +92,11 @@ function saveLastTabletLocation(data: SensorData) {
       longitude: data.longitude,
       locationAccuracy: data.locationAccuracy,
       outsideTemp: data.outsideTemp,
+      estimatedDistanceKm: data.estimatedDistanceKm,
       timestamp: data.timestamp,
     })
   );
+  saveEstimatedDistance(data.estimatedDistanceKm);
 }
 
 function useLastTabletLocation(status: SensorData["locationStatus"] = "cached") {
@@ -154,17 +157,7 @@ async function updateWeather(latitude: number, longitude: number) {
 }
 
 export const VehicleApi = {
-  startSimulation: () => {
-    if (simulationInterval) return;
-    simulationInterval = window.setInterval(() => {
-      currentData = {
-        ...currentData,
-        timestamp: Date.now()
-      };
-      
-      notify();
-    }, 3000);
-
+  startTracking: () => {
     if (!isTrustedLocationDevice()) {
       clearLocationData("disabled");
       return;
@@ -186,12 +179,24 @@ export const VehicleApi = {
     locationWatchId = navigator.geolocation.watchPosition(
       (position) => {
         const { latitude, longitude, accuracy } = position.coords;
+        const previous =
+          currentData.latitude !== null && currentData.longitude !== null
+            ? { latitude: currentData.latitude, longitude: currentData.longitude }
+            : null;
+        const next = { latitude, longitude };
+        const movementKm = previous ? distanceKmBetween(previous, next) : 0;
+        const plausibleMovement = accuracy <= 100 && movementKm > 0.01 && movementKm < 5;
+        const estimatedDistanceKm = plausibleMovement
+          ? currentData.estimatedDistanceKm + movementKm
+          : currentData.estimatedDistanceKm;
+
         currentData = {
           ...currentData,
           latitude,
           longitude,
           locationAccuracy: accuracy,
           locationStatus: "available",
+          estimatedDistanceKm,
           timestamp: Date.now(),
         };
         saveLastTabletLocation(currentData);
@@ -217,11 +222,7 @@ export const VehicleApi = {
     );
   },
   
-  stopSimulation: () => {
-    if (simulationInterval) {
-      clearInterval(simulationInterval);
-      simulationInterval = null;
-    }
+  stopTracking: () => {
     stopLocationWatch();
   },
   
@@ -237,16 +238,24 @@ export const VehicleApi = {
     notify();
   },
 
+  resetEstimatedDistance: () => {
+    currentData = { ...currentData, estimatedDistanceKm: 0, timestamp: Date.now() };
+    saveEstimatedDistance(0);
+    saveLastTabletLocation(currentData);
+    notify();
+  },
+
   isTrustedLocationDevice,
 
   setTrustedLocationDevice: (trusted: boolean) => {
     if (trusted) {
       localStorage.setItem(TRUSTED_DEVICE_KEY, "true");
-      VehicleApi.stopSimulation();
-      VehicleApi.startSimulation();
+      VehicleApi.stopTracking();
+      VehicleApi.startTracking();
     } else {
       localStorage.removeItem(TRUSTED_DEVICE_KEY);
       localStorage.removeItem(LAST_LOCATION_KEY);
+      localStorage.removeItem(ESTIMATED_DISTANCE_KEY);
       stopLocationWatch();
       clearLocationData("disabled");
     }
