@@ -68,7 +68,38 @@ function PanelOverlay({ open, style, label, rounded = "rounded-lg" }: PanelOverl
   );
 }
 
-function ForesterPhoto({ s }: { s: SensorData }) {
+const TYRE_BADGE_POSITION: Record<TyreRecord["position"], string> = {
+  FL: "left-1 top-[17%]",
+  FR: "right-1 top-[17%]",
+  RL: "left-1 top-[68%]",
+  RR: "right-1 top-[68%]",
+  Spare: "left-1/2 bottom-2 -translate-x-1/2",
+};
+
+function TyreBadge({ tyre, onEdit }: { tyre: TyreRecord; onEdit: (tyre: TyreRecord) => void }) {
+  const pressureOk = Math.abs(tyre.pressure - tyre.targetPressure) <= 1;
+  const needsAttention = tyre.condition === "Replace" || tyre.condition === "Poor";
+  const badgeColor = needsAttention
+    ? "border-red-500/60 bg-red-500/15 text-red-200"
+    : pressureOk
+      ? "border-green-500/50 bg-green-500/15 text-green-100"
+      : "border-amber-500/60 bg-amber-500/15 text-amber-100";
+
+  return (
+    <button
+      type="button"
+      onClick={() => onEdit(tyre)}
+      className={`absolute z-20 min-w-[58px] rounded-lg border px-2 py-1 text-left shadow-lg backdrop-blur ${badgeColor} ${TYRE_BADGE_POSITION[tyre.position]}`}
+      aria-label={`Edit ${tyre.position} tyre`}
+    >
+      <span className="block text-[10px] font-black leading-none">{tyre.position}</span>
+      <span className="mt-0.5 block text-xs font-mono font-bold leading-none">{tyre.pressure} psi</span>
+      <span className="mt-0.5 block max-w-[64px] truncate text-[9px] leading-none opacity-80">{tyre.condition}</span>
+    </button>
+  );
+}
+
+function ForesterPhoto({ s, tyres, onEditTyre }: { s: SensorData; tyres: TyreRecord[]; onEditTyre: (tyre: TyreRecord) => void }) {
   // All positions are percentages of the container (which has the photo)
   // Calibrated against the generated top-down image (3:4 aspect, car fills ~85% width, centered)
   return (
@@ -80,6 +111,10 @@ function ForesterPhoto({ s }: { s: SensorData }) {
         className="absolute inset-0 w-full h-full object-cover"
         draggable={false}
       />
+
+      {tyres.map((tyre) => (
+        <TyreBadge key={tyre.id} tyre={tyre} onEdit={onEditTyre} />
+      ))}
 
       {/* Bonnet overlay — top of image */}
       <PanelOverlay
@@ -211,20 +246,20 @@ export default function Vehicle() {
       <div className="flex items-center justify-center gap-2 px-2 flex-1">
 
         {/* Left door chips */}
-        <div className="flex flex-col gap-2 shrink-0 w-[76px]">
-          <StatusChip label="Pass LH" value={sensorData.passengerDoor ? "OPEN" : "Closed"} warning={sensorData.passengerDoor} />
-          <StatusChip label="Rear L" value={sensorData.rearLeftDoor ? "OPEN" : "Closed"} warning={sensorData.rearLeftDoor} />
+        <div className="flex flex-col gap-2 shrink-0 w-[90px]">
+          <StatusChip label="Passenger Door" value={sensorData.passengerDoor ? "OPEN" : "Closed"} warning={sensorData.passengerDoor} />
+          <StatusChip label="Rear Left Door" value={sensorData.rearLeftDoor ? "OPEN" : "Closed"} warning={sensorData.rearLeftDoor} />
         </div>
 
         {/* Photo + overlays */}
-        <div className="flex-1 max-w-[240px]">
-          <ForesterPhoto s={sensorData} />
+        <div className="flex-1 max-w-[260px]">
+          <ForesterPhoto s={sensorData} tyres={tyres} onEditTyre={setEditingTyre} />
         </div>
 
         {/* Right door chips */}
-        <div className="flex flex-col gap-2 shrink-0 w-[76px]">
-          <StatusChip label="Driver RH" value={sensorData.driverDoor ? "OPEN" : "Closed"} warning={sensorData.driverDoor} />
-          <StatusChip label="Rear R" value={sensorData.rearRightDoor ? "OPEN" : "Closed"} warning={sensorData.rearRightDoor} />
+        <div className="flex flex-col gap-2 shrink-0 w-[90px]">
+          <StatusChip label="Driver Door" value={sensorData.driverDoor ? "OPEN" : "Closed"} warning={sensorData.driverDoor} />
+          <StatusChip label="Rear Right Door" value={sensorData.rearRightDoor ? "OPEN" : "Closed"} warning={sensorData.rearRightDoor} />
         </div>
       </div>
 
@@ -300,8 +335,8 @@ export default function Vehicle() {
             >
               <div className="mt-2 p-4 rounded-xl bg-card/30 border border-border/30 grid grid-cols-2 gap-4">
                 {([
-                  ["driverDoor", "Driver Door (RH)"],
-                  ["passengerDoor", "Passenger Door (LH)"],
+                  ["driverDoor", "Driver Door"],
+                  ["passengerDoor", "Passenger Door"],
                   ["rearLeftDoor", "Rear Left Door"],
                   ["rearRightDoor", "Rear Right Door"],
                   ["bonnet", "Bonnet"],
