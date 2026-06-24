@@ -205,7 +205,6 @@ export default function Vehicle() {
       {/* Top chips */}
       <div className="flex gap-2 justify-center flex-wrap px-4 py-1 shrink-0">
         <StatusChip label="Speed" value={`${sensorData.speed} km/h`} active={sensorData.speed > 0} />
-        <StatusChip label="Handbrake" value={sensorData.handbrake ? "ON" : "OFF"} active={sensorData.handbrake} />
       </div>
 
       {/* Main: side chips + car photo + side chips */}
@@ -301,7 +300,6 @@ export default function Vehicle() {
             >
               <div className="mt-2 p-4 rounded-xl bg-card/30 border border-border/30 grid grid-cols-2 gap-4">
                 {([
-                  ["handbrake", "Handbrake"],
                   ["driverDoor", "Driver Door (RH)"],
                   ["passengerDoor", "Passenger Door (LH)"],
                   ["rearLeftDoor", "Rear Left Door"],

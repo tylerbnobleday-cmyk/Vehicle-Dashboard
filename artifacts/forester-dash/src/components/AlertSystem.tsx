@@ -44,10 +44,6 @@ export function AlertSystem() {
         if (sensorData.bonnet) fireAlert('door-bonnet', 'Bonnet Open!', 'Vehicle is in motion with bonnet open.', 'destructive');
       }
       
-      // Handbrake
-      if (sensorData.handbrake && sensorData.speed > 0) {
-         fireAlert('handbrake', 'Handbrake Engaged!', 'Vehicle is moving with handbrake engaged.', 'destructive');
-      }
     };
 
     const interval = setInterval(checkAlerts, 5000);
