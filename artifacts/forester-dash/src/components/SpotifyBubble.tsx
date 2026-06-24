@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, Loader2, Music2, Pause, Play, QrCode, RefreshCw, SkipBack, SkipForward, Users } from "lucide-react";
+import { Copy, Loader2, Music2, Pause, Play, QrCode, RefreshCw, Share2, SkipBack, SkipForward, Users } from "lucide-react";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +73,7 @@ export function SpotifyBubble() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showJamQr, setShowJamQr] = useState(false);
+  const [jamInviteUrl, setJamInviteUrl] = useState(() => localStorage.getItem("spotify_jam_invite_url") || "");
 
   const isTokenValid = Boolean(accessToken && Date.now() < tokenExpiry - 30000);
   const hasRefreshToken = Boolean(refreshToken || localStorage.getItem("spotify_refresh_token"));
@@ -81,9 +82,10 @@ export function SpotifyBubble() {
   const albumArt = track?.album.images[0]?.url;
   const artistText = track?.artists.map((artist) => artist.name).join(", ") || "";
   const progressPct = Math.min((progress / duration) * 100, 100);
-  const spotifyTrackUrl = track?.external_urls?.spotify || (track?.id ? `https://open.spotify.com/track/${track.id}` : "https://open.spotify.com/");
-  const spotifyAppUrl = track?.uri || "spotify:";
-  const jamQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=${encodeURIComponent(spotifyTrackUrl)}`;
+  const jamActive = /^https:\/\/open\.spotify\.com\/socialsession\/[^/?#]+/i.test(jamInviteUrl);
+  const jamQrUrl = jamActive
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=${encodeURIComponent(jamInviteUrl)}`
+    : "";
 
   const clampPosition = useCallback((next: { x: number; y: number }) => {
     const width = expanded ? 320 : 64;
@@ -103,6 +105,16 @@ export function SpotifyBubble() {
   useEffect(() => {
     localStorage.setItem("spotify_bubble_position", JSON.stringify(position));
   }, [position]);
+
+  useEffect(() => {
+    const syncJam = () => setJamInviteUrl(localStorage.getItem("spotify_jam_invite_url") || "");
+    window.addEventListener("storage", syncJam);
+    window.addEventListener("spotify-jam-updated", syncJam);
+    return () => {
+      window.removeEventListener("storage", syncJam);
+      window.removeEventListener("spotify-jam-updated", syncJam);
+    };
+  }, []);
 
   const doRefreshToken = useCallback(async () => {
     const storedRefresh = localStorage.getItem("spotify_refresh_token");
@@ -142,7 +154,7 @@ export function SpotifyBubble() {
     return true;
   }, []);
 
-  const spotifyFetch = useCallback(async (url: string, options: RequestInit = {}) => {
+  const spotifyFetch = useCallback(async (url: string, options: RequestInit = {}): Promise<Response | null> => {
     let token = localStorage.getItem("spotify_access_token");
     if (!token || Date.now() >= Number(localStorage.getItem("spotify_token_expiry") || 0) - 30000) {
       const refreshed = await doRefreshToken();
@@ -280,11 +292,32 @@ export function SpotifyBubble() {
     setTimeout(fetchPlayback, 250);
   };
 
-  const openJamHelper = () => {
-    window.location.href = spotifyAppUrl;
-    setTimeout(() => {
-      window.open(spotifyTrackUrl, "_blank", "noopener,noreferrer");
-    }, 250);
+  const saveJamInvite = (url: string) => {
+    const trimmed = url.trim();
+    if (!/^https:\/\/open\.spotify\.com\/socialsession\/[^/?#]+/i.test(trimmed)) {
+      setError("Paste a Spotify Jam invite link");
+      return;
+    }
+    localStorage.setItem("spotify_jam_invite_url", trimmed);
+    setJamInviteUrl(trimmed);
+    setShowJamQr(true);
+    setError("");
+    window.dispatchEvent(new Event("spotify-jam-updated"));
+  };
+
+  const startJam = () => {
+    window.location.href = "spotify:";
+    const pasted = window.prompt("Start a Jam in Spotify, tap Share Invite, then paste the Jam link here:");
+    if (pasted) saveJamInvite(pasted);
+  };
+
+  const shareJam = async () => {
+    if (!jamActive) return;
+    if (navigator.share) {
+      await navigator.share({ title: "Join my Spotify Jam", url: jamInviteUrl });
+      return;
+    }
+    await navigator.clipboard.writeText(jamInviteUrl);
   };
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -414,35 +447,49 @@ export function SpotifyBubble() {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={openJamHelper}
+                    onClick={jamActive ? () => { window.location.href = jamInviteUrl; } : startJam}
                     className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg bg-[#1DB954]/15 text-xs font-bold text-[#1DB954] hover:bg-[#1DB954]/25"
-                    aria-label="Open Spotify to start or join a Jam"
+                    aria-label={jamActive ? "Join Spotify Jam" : "Start Spotify Jam"}
                   >
-                    <Users className="h-4 w-4" /> Add to Jam
+                    <Users className="h-4 w-4" /> {jamActive ? "Join Jam" : "Start Jam"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowJamQr((current) => !current)}
+                    disabled={!jamActive}
                     className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10"
-                    aria-label="Show Spotify QR code"
+                    aria-label="Show Spotify Jam QR code"
                   >
                     <QrCode className="h-4 w-4" />
                   </button>
-                  <a
-                    href={spotifyTrackUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10"
-                    aria-label="Open current track in Spotify"
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(jamInviteUrl)}
+                    disabled={!jamActive}
+                    className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 disabled:opacity-40"
+                    aria-label="Copy Spotify Jam link"
                   >
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
+                    <Copy className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={shareJam}
+                    disabled={!jamActive}
+                    className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 disabled:opacity-40"
+                    aria-label="Share Spotify Jam"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </button>
                 </div>
                 {showJamQr ? (
                   <div className="mt-2 flex items-center gap-3">
-                    <img src={jamQrUrl} alt="Spotify track QR code" className="h-16 w-16 rounded-lg bg-white p-1" draggable={false} />
+                    {jamActive ? (
+                      <img src={jamQrUrl} alt="Spotify Jam QR code" className="h-16 w-16 rounded-lg bg-white p-1" draggable={false} />
+                    ) : (
+                      <div className="grid h-16 w-16 place-items-center rounded-lg border border-white/10 bg-white/5 text-[10px] font-bold text-zinc-500">No Jam</div>
+                    )}
                     <p className="text-[10px] leading-snug text-zinc-400">
-                      Spotify makes the real Jam invite inside the Spotify app. This QR opens the current song fast.
+                      {jamActive ? "QR opens the active Spotify Jam." : "No Active Jam. Start one in Spotify and paste the invite."}
                     </p>
                   </div>
                 ) : null}

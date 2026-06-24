@@ -42,7 +42,7 @@ function Router() {
 function App() {
   useEffect(() => {
     const orientation = screen.orientation as ScreenOrientation & {
-      lock?: (orientation: OrientationLockType) => Promise<void>;
+      lock?: (orientation: "landscape-primary") => Promise<void>;
     };
 
     orientation.lock?.("landscape-primary").catch(() => {

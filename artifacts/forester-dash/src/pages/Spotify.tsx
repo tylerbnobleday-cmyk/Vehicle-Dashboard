@@ -7,13 +7,16 @@ import { Slider } from "@/components/ui/slider";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play, Pause, SkipForward, SkipBack, Volume2, VolumeX,
-  Music, Shuffle, Repeat, ExternalLink, LogOut, RefreshCw, Loader2
+  Music, Shuffle, Repeat, ExternalLink, LogOut, RefreshCw, Loader2,
+  Copy, Share2, QrCode, Users, Link as LinkIcon
 } from "lucide-react";
 
 const SPOTIFY_SCOPES = [
   "user-read-playback-state",
   "user-modify-playback-state",
   "user-read-currently-playing",
+  "user-read-recently-played",
+  "playlist-read-private",
 ].join(" ");
 
 const SPOTIFY_CLIENT_ID = "7e3432b5296a44a69af55235da632940";
@@ -51,6 +54,30 @@ interface PlaybackState {
   device: { volume_percent: number; name: string } | null;
 }
 
+interface SpotifyPlaylist {
+  id: string;
+  name: string;
+  owner: { display_name?: string };
+  images: { url: string }[];
+  external_urls: { spotify: string };
+}
+
+interface RecentlyPlayedItem {
+  played_at: string;
+  track: SpotifyTrack & {
+    external_urls?: { spotify?: string };
+  };
+}
+
+const FEATURED_PLAYLIST_IDS = [
+  "48lCjFI8wBGZ2k6HYn3xyw",
+  "37i9dQZF1EJtgCui7Mg3gx",
+  "37i9dQZF1EJtu9hNMOrzrO",
+  "6j7vc7aCw6L3k8B9Lpu6Ym",
+];
+
+const isJamInviteUrl = (url: string) => /^https:\/\/open\.spotify\.com\/socialsession\/[^/?#]+/i.test(url.trim());
+
 function msToTime(ms: number) {
   const total = Math.floor(ms / 1000);
   const m = Math.floor(total / 60);
@@ -70,10 +97,27 @@ export default function Spotify() {
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(50);
+  const [jamInviteUrl, setJamInviteUrl] = useState(() => localStorage.getItem("spotify_jam_invite_url") || "");
+  const [jamInput, setJamInput] = useState(() => localStorage.getItem("spotify_jam_invite_url") || "");
+  const [jamParticipantCount, setJamParticipantCount] = useState(() => localStorage.getItem("spotify_jam_participant_count") || "");
+  const [jamQrVersion, setJamQrVersion] = useState(0);
+  const [playlistCache, setPlaylistCache] = useState<Record<string, SpotifyPlaylist | null>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("spotify_featured_playlists") || "{}");
+    } catch {
+      return {};
+    }
+  });
+  const [playlistLoading, setPlaylistLoading] = useState(false);
+  const [recentlyPlayed, setRecentlyPlayed] = useState<RecentlyPlayedItem[]>([]);
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isTokenValid = Boolean(accessToken && Date.now() < tokenExpiry - 30000);
   const hasRefreshToken = Boolean(refreshToken || localStorage.getItem("spotify_refresh_token"));
+  const jamActive = isJamInviteUrl(jamInviteUrl);
+  const jamQrUrl = jamActive
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=12&v=${jamQrVersion}&data=${encodeURIComponent(jamInviteUrl)}`
+    : "";
 
   const doRefreshToken = useCallback(async () => {
     const storedRefresh = localStorage.getItem("spotify_refresh_token");
@@ -110,7 +154,7 @@ export default function Spotify() {
     return false;
   }, []);
 
-  const spotifyFetch = useCallback(async (url: string, options: RequestInit = {}) => {
+  const spotifyFetch = useCallback(async (url: string, options: RequestInit = {}): Promise<Response | null> => {
     let token = localStorage.getItem("spotify_access_token");
     if (!token || Date.now() >= Number(localStorage.getItem("spotify_token_expiry") || 0) - 30000) {
       const refreshed = await doRefreshToken();
@@ -212,6 +256,108 @@ export default function Spotify() {
     setVolume(val[0]);
     await spotifyFetch(`/me/player/volume?volume_percent=${val[0]}`, { method: "PUT" });
   };
+
+  const saveJamInvite = (url: string) => {
+    const trimmed = url.trim();
+    if (!isJamInviteUrl(trimmed)) {
+      setError("That is not a Spotify Jam invite. It must look like https://open.spotify.com/socialsession/...");
+      return;
+    }
+    localStorage.setItem("spotify_jam_invite_url", trimmed);
+    setJamInviteUrl(trimmed);
+    setJamInput(trimmed);
+    setError("");
+    setJamQrVersion((current) => current + 1);
+    window.dispatchEvent(new Event("spotify-jam-updated"));
+  };
+
+  const clearJamInvite = () => {
+    localStorage.removeItem("spotify_jam_invite_url");
+    localStorage.removeItem("spotify_jam_participant_count");
+    setJamInviteUrl("");
+    setJamInput("");
+    setJamParticipantCount("");
+    setJamQrVersion((current) => current + 1);
+    window.dispatchEvent(new Event("spotify-jam-updated"));
+  };
+
+  const startJam = async () => {
+    window.location.href = "spotify:";
+    try {
+      const clip = await navigator.clipboard.readText();
+      if (isJamInviteUrl(clip)) {
+        saveJamInvite(clip);
+        return;
+      }
+    } catch {
+      // Clipboard can be blocked; the manual paste field remains available.
+    }
+    setError("Start the Jam in Spotify, tap Share Invite, then paste the Jam link below.");
+  };
+
+  const copyJamLink = async () => {
+    if (!jamActive) return;
+    await navigator.clipboard.writeText(jamInviteUrl);
+  };
+
+  const shareJam = async () => {
+    if (!jamActive) return;
+    if (navigator.share) {
+      await navigator.share({ title: "Join my Spotify Jam", url: jamInviteUrl });
+      return;
+    }
+    await copyJamLink();
+  };
+
+  const updateParticipantCount = (value: string) => {
+    setJamParticipantCount(value);
+    if (value.trim()) {
+      localStorage.setItem("spotify_jam_participant_count", value.trim());
+    } else {
+      localStorage.removeItem("spotify_jam_participant_count");
+    }
+  };
+
+  const fetchFeaturedPlaylists = useCallback(async () => {
+    if (!isTokenValid) return;
+    setPlaylistLoading(true);
+    const nextCache = { ...playlistCache };
+    let changed = false;
+    await Promise.all(FEATURED_PLAYLIST_IDS.map(async (id) => {
+      if (id in nextCache) return;
+      try {
+        const resp = await spotifyFetch(`/playlists/${id}?fields=id,name,owner(display_name),images,external_urls`);
+        nextCache[id] = resp?.ok ? await resp.json() : null;
+      } catch {
+        nextCache[id] = null;
+      }
+      changed = true;
+    }));
+    if (changed) {
+      setPlaylistCache(nextCache);
+      localStorage.setItem("spotify_featured_playlists", JSON.stringify(nextCache));
+      localStorage.setItem("spotify_featured_playlists_cached_at", new Date().toISOString());
+    }
+    setPlaylistLoading(false);
+  }, [isTokenValid, playlistCache, spotifyFetch]);
+
+  const fetchRecentlyPlayed = useCallback(async () => {
+    if (!isTokenValid) return;
+    try {
+      const resp = await spotifyFetch("/me/player/recently-played?limit=8");
+      if (resp?.ok) {
+        const data = await resp.json();
+        setRecentlyPlayed(data.items || []);
+      }
+    } catch {
+      setRecentlyPlayed([]);
+    }
+  }, [isTokenValid, spotifyFetch]);
+
+  useEffect(() => {
+    fetchFeaturedPlaylists();
+    fetchRecentlyPlayed();
+  }, [fetchFeaturedPlaylists, fetchRecentlyPlayed]);
 
   const track = playback?.item;
   const duration = track?.duration_ms || 1;
@@ -464,6 +610,182 @@ export default function Spotify() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Card className="border-border/40 bg-card/50 backdrop-blur">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center justify-between gap-3 text-lg">
+            <span className="flex items-center gap-2"><Users className="w-5 h-5 text-[#1DB954]" /> Spotify Jam</span>
+            <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${jamActive ? "bg-[#1DB954]/20 text-[#1DB954]" : "bg-muted text-muted-foreground"}`}>
+              {jamActive ? "Jam Active" : "Jam Inactive"}
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4">
+            <div className="space-y-4">
+              <div className="flex flex-col md:flex-row gap-2">
+                <Input
+                  value={jamInput}
+                  onChange={(event) => setJamInput(event.target.value)}
+                  placeholder="Paste Spotify Jam invite: https://open.spotify.com/socialsession/..."
+                  className="h-12 font-mono text-xs"
+                />
+                <Button onClick={() => saveJamInvite(jamInput)} className="h-12 bg-[#1DB954] text-black hover:bg-[#1DB954]/90">
+                  Save Jam
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={startJam} variant="outline" className="h-11 gap-2">
+                  <Music className="w-4 h-4" /> Start a Jam
+                </Button>
+                <Button disabled={!jamActive} onClick={() => { window.location.href = jamInviteUrl; }} className="h-11 gap-2">
+                  <Users className="w-4 h-4" /> Join Jam
+                </Button>
+                <Button disabled={!jamActive} variant="outline" onClick={copyJamLink} className="h-11 gap-2">
+                  <Copy className="w-4 h-4" /> Copy Jam Link
+                </Button>
+                <Button disabled={!jamActive} variant="outline" onClick={shareJam} className="h-11 gap-2">
+                  <Share2 className="w-4 h-4" /> Share Jam
+                </Button>
+                <Button disabled={!jamActive} variant="outline" onClick={() => setJamQrVersion((current) => current + 1)} className="h-11 gap-2">
+                  <QrCode className="w-4 h-4" /> Regenerate QR
+                </Button>
+                <Button disabled={!jamActive} variant="ghost" onClick={clearJamInvite} className="h-11">
+                  End
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_170px] gap-3">
+                <div className="rounded-xl border border-border/40 bg-background/40 p-3">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Current Jam invite link</p>
+                  {jamActive ? (
+                    <a href={jamInviteUrl} target="_blank" rel="noreferrer" className="break-all font-mono text-xs text-[#1DB954] hover:underline">
+                      {jamInviteUrl}
+                    </a>
+                  ) : (
+                    <p className="font-bold text-muted-foreground">No Active Jam</p>
+                  )}
+                </div>
+                <div className="rounded-xl border border-border/40 bg-background/40 p-3">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Participants</Label>
+                  <Input
+                    value={jamParticipantCount}
+                    onChange={(event) => updateParticipantCount(event.target.value)}
+                    placeholder="Unknown"
+                    inputMode="numeric"
+                    className="mt-2 h-10"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center justify-center rounded-xl border border-border/40 bg-background/40 p-4">
+              {jamActive ? (
+                <>
+                  <img src={jamQrUrl} alt="Spotify Jam QR code" className="h-44 w-44 rounded-xl bg-white p-2" />
+                  <p className="mt-3 text-center text-xs text-muted-foreground">Scans into this active Jam session.</p>
+                </>
+              ) : (
+                <div className="grid h-44 w-44 place-items-center rounded-xl border border-dashed border-border text-center">
+                  <div>
+                    <QrCode className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                    <p className="font-bold text-muted-foreground">No Active Jam</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/40 bg-card/50 backdrop-blur">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center justify-between gap-3 text-lg">
+            <span>Featured Playlists</span>
+            {playlistLoading && <Loader2 className="h-4 w-4 animate-spin text-[#1DB954]" />}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {FEATURED_PLAYLIST_IDS.map((id) => {
+              const playlist = playlistCache[id];
+              return (
+                <div key={id} className="rounded-xl border border-border/40 bg-background/40 p-3">
+                  {playlist ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => window.open(playlist.external_urls.spotify, "_blank", "noopener,noreferrer")}
+                        className="block w-full text-left"
+                      >
+                        <img src={playlist.images[0]?.url} alt="" className="aspect-square w-full rounded-lg object-cover bg-muted" />
+                        <p className="mt-3 line-clamp-2 font-bold leading-tight">{playlist.name}</p>
+                        <p className="mt-1 truncate text-xs text-muted-foreground">{playlist.owner?.display_name || "Spotify"}</p>
+                      </button>
+                      <Button
+                        variant="outline"
+                        className="mt-3 h-10 w-full gap-2"
+                        onClick={() => window.open(playlist.external_urls.spotify, "_blank", "noopener,noreferrer")}
+                      >
+                        Open <ExternalLink className="w-3.5 h-3.5" />
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="flex aspect-square flex-col items-center justify-center rounded-lg border border-dashed border-border text-center text-xs text-muted-foreground">
+                      <Music className="mb-2 h-6 w-6" />
+                      Unavailable or private
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/40 bg-card/50 backdrop-blur">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Recently Played</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {recentlyPlayed.length ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {recentlyPlayed.slice(0, 6).map((item) => (
+                <a
+                  key={`${item.track.id}-${item.played_at}`}
+                  href={item.track.external_urls?.spotify || "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 rounded-xl border border-border/40 bg-background/40 p-3 hover:bg-background/70"
+                >
+                  <img src={item.track.album.images[0]?.url} alt="" className="h-12 w-12 rounded-lg object-cover bg-muted" />
+                  <div className="min-w-0">
+                    <p className="truncate font-bold">{item.track.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{item.track.artists.map(a => a.name).join(", ")}</p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Reconnect Spotify if this stays empty; recently played needs the new Spotify permission.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/40 bg-card/50 backdrop-blur">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Recommended Music</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Spotify does not expose the in-app Jam/recommendation feed cleanly through this app. Use the featured playlists above or open Spotify for live recommendations.
+          </p>
+          <Button variant="outline" className="h-11 gap-2" onClick={() => window.open("https://open.spotify.com/", "_blank", "noopener,noreferrer")}>
+            <LinkIcon className="w-4 h-4" /> Open Spotify
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
