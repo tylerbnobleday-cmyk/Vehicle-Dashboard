@@ -5,7 +5,7 @@
   "start_url": "/Vehicle-Dashboard/",
   "scope": "/Vehicle-Dashboard/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "landscape",
   "background_color": "#020617",
   "theme_color": "#0f172a",
   "icons": [

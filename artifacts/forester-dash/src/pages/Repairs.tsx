@@ -22,7 +22,13 @@ export default function Repairs() {
   const [editingRepair, setEditingRepair] = useState<RepairRecord | null>(null);
   const [newRepair, setNewRepair] = useState({ title: '', priority: 'Medium' as any, status: 'Not Started' as any, notes: '' });
 
-  const filteredRepairs = repairs.filter(r => statusFilter === "All" || r.status === statusFilter);
+  const filteredRepairs = repairs
+    .filter(r => statusFilter === "All" || r.status === statusFilter)
+    .sort((a, b) => {
+      const completionOrder = Number(a.status === "Completed") - Number(b.status === "Completed");
+      if (completionOrder !== 0) return completionOrder;
+      return new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime();
+    });
 
   const handleSaveAdd = () => {
     addRepair(newRepair);

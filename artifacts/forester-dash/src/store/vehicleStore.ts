@@ -179,13 +179,13 @@ const defaultLighting: LightingSystem = {
     {
       id: 'rearCabin',
       name: 'Rear Cabin',
-      controllerName: 'Lotus Lantern Bluetooth controller',
-      controllerType: 'Bluetooth',
+      controllerName: 'Anko IR controller',
+      controllerType: 'IR',
       status: 'offline',
       enabled: true,
       color: 'Purple',
       brightness: 80,
-      notes: 'Designed for future Bluetooth bridge or Web Bluetooth integration.',
+      notes: 'Requires an IR blaster bridge to control from the web app.',
     },
     {
       id: 'bootArea',
@@ -553,7 +553,7 @@ export const useVehicleStore = create<VehicleState>()(
       })
     }),
     {
-      name: 'vehicle-storage-v12',
+      name: 'vehicle-storage-v13',
       partialize: (state) => ({
         info: state.info,
         services: state.services,

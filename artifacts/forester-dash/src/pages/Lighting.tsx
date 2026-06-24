@@ -17,7 +17,7 @@ const eventLabels: Record<string, string> = {
 
 const zoneIcons: Record<LightingZoneId, typeof RadioTower> = {
   frontCabin: RadioTower,
-  rearCabin: Bluetooth,
+  rearCabin: RadioTower,
   bootArea: Bluetooth,
 };
 
@@ -38,7 +38,7 @@ export default function Lighting() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight uppercase">Unified Lighting</h1>
-          <p className="text-muted-foreground text-sm mt-1">Front IR, rear Bluetooth, and boot Bluetooth LED control.</p>
+          <p className="text-muted-foreground text-sm mt-1">Front and rear Anko IR, plus boot Lotus Lantern Bluetooth LED control.</p>
         </div>
         <div className="flex gap-2">
           <Button variant={allEnabled ? "default" : "outline"} onClick={() => setAllLighting(true)}>
