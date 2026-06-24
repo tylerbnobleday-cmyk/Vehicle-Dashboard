@@ -18,7 +18,7 @@ const SPOTIFY_SCOPES = [
 
 const SPOTIFY_CLIENT_ID = "7e3432b5296a44a69af55235da632940";
 const APP_BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
-const REDIRECT_URI = `${window.location.origin}${APP_BASE_PATH}/spotify`;
+const REDIRECT_URI = `${window.location.origin}${APP_BASE_PATH}/`;
 
 function generateCodeVerifier(length = 128) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";

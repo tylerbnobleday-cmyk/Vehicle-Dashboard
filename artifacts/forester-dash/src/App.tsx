@@ -10,7 +10,6 @@ import { AlertSystem } from "@/components/AlertSystem";
 import Dashboard from "@/pages/Dashboard";
 import Vehicle from "@/pages/Vehicle";
 import Service from "@/pages/Service";
-import Tyres from "@/pages/Tyres";
 import Repairs from "@/pages/Repairs";
 import Camping from "@/pages/Camping";
 import Lighting from "@/pages/Lighting";
@@ -27,7 +26,6 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/vehicle" component={Vehicle} />
       <Route path="/service" component={Service} />
-      <Route path="/tyres" component={Tyres} />
       <Route path="/repairs" component={Repairs} />
       <Route path="/camping" component={Camping} />
       <Route path="/lighting" component={Lighting} />

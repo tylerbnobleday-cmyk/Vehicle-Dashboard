@@ -1,10 +1,16 @@
-import { useVehicleStore } from "@/store/vehicleStore";
+import { useVehicleStore, TyreRecord } from "@/store/vehicleStore";
 import { VehicleApi, SensorData } from "@/services/vehicleApi";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "@/components/StatusBadge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, CircleDashed, Settings } from "lucide-react";
 import { useState } from "react";
+import { format } from "date-fns";
 import foresterTopdown from "@/assets/forester-topdown.png";
 
 interface StatusChipProps {
@@ -154,7 +160,10 @@ function ForesterPhoto({ s }: { s: SensorData }) {
 
 export default function Vehicle() {
   const sensorData = useVehicleStore((s) => s.sensorData);
+  const tyres = useVehicleStore((s) => s.tyres);
+  const updateTyre = useVehicleStore((s) => s.updateTyre);
   const [showToggles, setShowToggles] = useState(false);
+  const [editingTyre, setEditingTyre] = useState<TyreRecord | null>(null);
 
   const toggleSensor = (key: keyof SensorData) => {
     if (typeof sensorData[key] === "boolean") {
@@ -162,20 +171,34 @@ export default function Vehicle() {
     }
   };
 
+  const getPressureColor = (pressure: number, target: number) => {
+    const diff = Math.abs(pressure - target);
+    if (diff <= 1) return "text-green-500";
+    if (diff <= 3) return "text-amber-500";
+    return "text-red-500";
+  };
+
+  const formatInstallDate = (installDate: string) => {
+    if (!installDate) return "date not set";
+    const date = new Date(installDate);
+    if (Number.isNaN(date.getTime())) return "date not set";
+    return format(date, "MMM yyyy");
+  };
+
+  const handleSaveTyre = () => {
+    if (!editingTyre) return;
+    updateTyre(editingTyre.id, editingTyre);
+    setEditingTyre(null);
+  };
+
   return (
-    <div className="min-h-[calc(100dvh-6rem)] flex flex-col pb-4">
+    <div className="min-h-[calc(100dvh-6rem)] flex flex-col pb-32">
 
       {/* Header */}
       <div className="px-4 pt-4 pb-2 flex items-center justify-between shrink-0">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Vehicle</h1>
           <p className="text-sm text-muted-foreground">2010 Subaru Forester XS</p>
-        </div>
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold border transition-all duration-500
-          ${sensorData.engineRunning ? "bg-green-500/10 border-green-500/40 text-green-400"
-            : "bg-muted/40 border-border/40 text-muted-foreground"}`}>
-          <span className={`w-2 h-2 rounded-full transition-colors duration-500 ${sensorData.engineRunning ? "bg-green-400 animate-pulse" : "bg-muted-foreground"}`} />
-          {sensorData.engineRunning ? "ENGINE ON" : "ENGINE OFF"}
         </div>
       </div>
 
@@ -222,6 +245,41 @@ export default function Vehicle() {
         <StatusChip label="Reverse" value={sensorData.reverseLight ? "ON" : "Off"} active={sensorData.reverseLight} />
       </div>
 
+      <div className="mx-4 mb-3 shrink-0">
+        <Card className="bg-card/35 border-border/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm uppercase tracking-widest text-muted-foreground">
+              <CircleDashed className="w-4 h-4" /> Tyres
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {tyres.map((tyre) => (
+              <div key={tyre.id} className="rounded-xl border border-border/40 bg-background/40 p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-lg font-black uppercase leading-none">{tyre.position}</p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">{tyre.brand}</p>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setEditingTyre(tyre)}>
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Pressure</p>
+                    <p className={`text-xl font-mono font-bold ${getPressureColor(tyre.pressure, tyre.targetPressure)}`}>
+                      {tyre.pressure}<span className="ml-1 text-xs text-muted-foreground">psi</span>
+                    </p>
+                  </div>
+                  <StatusBadge status={tyre.condition} className="text-xs px-2 py-1" />
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">Installed {formatInstallDate(tyre.installDate)}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Simulation toggles — collapsible */}
       <div className="mx-4 shrink-0">
         <button
@@ -243,7 +301,6 @@ export default function Vehicle() {
             >
               <div className="mt-2 p-4 rounded-xl bg-card/30 border border-border/30 grid grid-cols-2 gap-4">
                 {([
-                  ["engineRunning", "Engine Running"],
                   ["handbrake", "Handbrake"],
                   ["driverDoor", "Driver Door (RH)"],
                   ["passengerDoor", "Passenger Door (LH)"],
@@ -271,6 +328,43 @@ export default function Vehicle() {
           )}
         </AnimatePresence>
       </div>
+
+      <Dialog open={!!editingTyre} onOpenChange={(open) => !open && setEditingTyre(null)}>
+        <DialogContent className="sm:max-w-[500px] bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-2xl uppercase">Edit {editingTyre?.position} Tyre</DialogTitle>
+          </DialogHeader>
+          {editingTyre && (
+            <div className="space-y-6 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2 col-span-2">
+                  <Label>Brand & Model</Label>
+                  <Input value={editingTyre.brand} onChange={e => setEditingTyre({ ...editingTyre, brand: e.target.value })} className="h-12 text-lg" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Current Pressure (psi)</Label>
+                  <Input type="number" value={editingTyre.pressure} onChange={e => setEditingTyre({ ...editingTyre, pressure: parseInt(e.target.value) || 0 })} className="h-12 text-lg" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Condition</Label>
+                  <select
+                    className="flex h-12 w-full rounded-md border border-input bg-transparent px-3 py-1 text-lg shadow-sm transition-colors"
+                    value={editingTyre.condition}
+                    onChange={e => setEditingTyre({ ...editingTyre, condition: e.target.value as TyreRecord["condition"] })}
+                  >
+                    <option value="Excellent">Excellent</option>
+                    <option value="Good">Good</option>
+                    <option value="Fair">Fair</option>
+                    <option value="Poor">Poor</option>
+                    <option value="Replace">Replace</option>
+                  </select>
+                </div>
+              </div>
+              <Button onClick={handleSaveTyre} size="lg" className="w-full h-14 text-lg">Save Changes</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   AlertCircle, Thermometer, CheckCircle2,
-  Wrench, CircleDot, ShieldCheck, Activity, Car, TriangleAlert, MapPin
+  Wrench, CircleDot, ShieldCheck, Car, TriangleAlert, MapPin
 } from "lucide-react";
 import { format } from "date-fns";
 import foresterHero from "@/assets/forester-hero.png";
@@ -126,7 +126,7 @@ export default function Dashboard() {
       )}
 
       {/* Live sensor strip */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
@@ -143,17 +143,6 @@ export default function Dashboard() {
               <p className="text-lg font-mono font-bold truncate">{locationText}</p>
             </div>
             <MapPin className="w-7 h-7 text-muted-foreground/25 shrink-0" />
-          </CardContent>
-        </Card>
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Engine</p>
-              <p className={`text-2xl font-bold uppercase ${sensorData.engineRunning ? 'text-green-400' : 'text-muted-foreground'}`}>
-                {sensorData.engineRunning ? 'Running' : 'Off'}
-              </p>
-            </div>
-            <Activity className="w-7 h-7 text-muted-foreground/25" />
           </CardContent>
         </Card>
       </div>

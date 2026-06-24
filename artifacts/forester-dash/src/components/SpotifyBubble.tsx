@@ -10,7 +10,7 @@ const SPOTIFY_SCOPES = [
   "user-read-currently-playing",
 ].join(" ");
 const APP_BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
-const REDIRECT_URI = `${window.location.origin}${APP_BASE_PATH}/spotify`;
+const REDIRECT_URI = `${window.location.origin}${APP_BASE_PATH}/`;
 
 interface SpotifyTrack {
   name: string;
@@ -84,7 +84,7 @@ export function SpotifyBubble() {
     const height = expanded ? 148 : 64;
     const margin = 12;
     return {
-      x: Math.min(Math.max(next.x, margin), window.innerWidth - width - margin),
+      x: window.innerWidth - width - margin,
       y: Math.min(Math.max(next.y, margin), window.innerHeight - height - 104),
     };
   }, [expanded]);
