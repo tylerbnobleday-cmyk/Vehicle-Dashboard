@@ -21,18 +21,33 @@ import Spotify from "@/pages/Spotify";
 const queryClient = new QueryClient();
 const JAM_INVITE_PATTERN = /https:\/\/open\.spotify\.com\/socialsession\/[^\s]+/i;
 
+function saveJamInviteFromText(text: string) {
+  const match = text.match(JAM_INVITE_PATTERN);
+  if (!match) return false;
+
+  localStorage.setItem("spotify_jam_invite_url", match[0]);
+  window.dispatchEvent(new Event("spotify-jam-updated"));
+  return true;
+}
+
 function saveSharedJamInvite() {
   const params = new URLSearchParams(window.location.search);
   const sharedText = [params.get("url"), params.get("text"), params.get("title")]
     .filter(Boolean)
     .map((value) => value || "")
     .join(" ");
-  const match = sharedText.match(JAM_INVITE_PATTERN);
-  if (!match) return;
+  if (!saveJamInviteFromText(sharedText)) return;
 
-  localStorage.setItem("spotify_jam_invite_url", match[0]);
-  window.dispatchEvent(new Event("spotify-jam-updated"));
   window.history.replaceState({}, "", `${import.meta.env.BASE_URL}`);
+}
+
+async function tryReadJamInviteFromClipboard() {
+  try {
+    const text = await navigator.clipboard?.readText?.();
+    if (text) saveJamInviteFromText(text);
+  } catch {
+    // Clipboard reads need browser permission/user activation; Android share target remains the fallback.
+  }
 }
 
 function Router() {
@@ -56,6 +71,16 @@ function Router() {
 function App() {
   useEffect(() => {
     saveSharedJamInvite();
+    void tryReadJamInviteFromClipboard();
+
+    const checkJamClipboard = () => {
+      if (document.visibilityState === "visible") {
+        void tryReadJamInviteFromClipboard();
+      }
+    };
+
+    window.addEventListener("focus", checkJamClipboard);
+    document.addEventListener("visibilitychange", checkJamClipboard);
 
     const orientation = screen.orientation as ScreenOrientation & {
       lock?: (orientation: "landscape-primary") => Promise<void>;
@@ -64,6 +89,11 @@ function App() {
     orientation.lock?.("landscape-primary").catch(() => {
       // Android may reject this outside a fully installed PWA; CSS still keeps the dashboard landscape.
     });
+
+    return () => {
+      window.removeEventListener("focus", checkJamClipboard);
+      document.removeEventListener("visibilitychange", checkJamClipboard);
+    };
   }, []);
 
   return (

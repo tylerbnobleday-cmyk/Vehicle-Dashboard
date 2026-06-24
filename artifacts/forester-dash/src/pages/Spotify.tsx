@@ -120,6 +120,21 @@ export default function Spotify() {
     ? `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=12&v=${jamQrVersion}&data=${encodeURIComponent(jamInviteUrl)}`
     : "";
 
+  useEffect(() => {
+    const syncJamInvite = () => {
+      const savedInvite = localStorage.getItem("spotify_jam_invite_url") || "";
+      setJamInviteUrl(savedInvite);
+      setJamInput(savedInvite);
+    };
+
+    window.addEventListener("storage", syncJamInvite);
+    window.addEventListener("spotify-jam-updated", syncJamInvite);
+    return () => {
+      window.removeEventListener("storage", syncJamInvite);
+      window.removeEventListener("spotify-jam-updated", syncJamInvite);
+    };
+  }, []);
+
   const doRefreshToken = useCallback(async () => {
     const storedRefresh = localStorage.getItem("spotify_refresh_token");
     const storedClientId = localStorage.getItem("spotify_client_id") || SPOTIFY_CLIENT_ID;
@@ -685,7 +700,12 @@ export default function Spotify() {
                       {jamInviteUrl}
                     </a>
                   ) : (
-                    <p className="font-bold text-muted-foreground">No Active Jam</p>
+                    <div>
+                      <p className="font-bold text-muted-foreground">No Active Jam</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Share the Jam invite from Spotify to Forester Dashboard or copy it before returning here.
+                      </p>
+                    </div>
                   )}
                 </div>
                 <div className="rounded-xl border border-border/40 bg-background/40 p-3">
@@ -712,6 +732,7 @@ export default function Spotify() {
                   <div>
                     <QrCode className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
                     <p className="font-bold text-muted-foreground">No Active Jam</p>
+                    <p className="mt-1 px-2 text-xs text-muted-foreground">Waiting for a Spotify Jam invite.</p>
                   </div>
                 </div>
               )}
