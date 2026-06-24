@@ -337,7 +337,7 @@ export function SpotifyBubble() {
 
   const startJam = async () => {
     setJamCapturePending(true);
-    setError("Copy the Spotify Jam invite, then come back here.");
+    setError("Share the Spotify Jam invite to Forester Dashboard.");
     window.location.href = "spotify:";
     setTimeout(() => void readJamFromClipboard(), 800);
   };
@@ -520,7 +520,7 @@ export function SpotifyBubble() {
                       <div className="grid h-16 w-16 place-items-center rounded-lg border border-white/10 bg-white/5 text-[10px] font-bold text-zinc-500">No Jam</div>
                     )}
                     <p className="text-[10px] leading-snug text-zinc-400">
-                      {jamActive ? "QR opens the active Spotify Jam." : "No Active Jam. Start one in Spotify and paste the invite."}
+                      {jamActive ? "QR opens the active Spotify Jam." : "No Active Jam. Share the Spotify Jam invite to Forester Dashboard."}
                     </p>
                   </div>
                 ) : null}

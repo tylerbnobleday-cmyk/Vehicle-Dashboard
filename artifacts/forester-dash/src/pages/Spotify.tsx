@@ -311,7 +311,7 @@ export default function Spotify() {
 
   const startJam = async () => {
     setJamCapturePending(true);
-    setError("Copy the Spotify Jam invite, then come back here. The app will grab it automatically.");
+    setError("In Spotify, start the Jam, tap Share Invite, then share it to Forester Dashboard.");
     window.location.href = "spotify:";
     setTimeout(() => void readJamFromClipboard(), 800);
   };
@@ -648,7 +648,7 @@ export default function Spotify() {
                 <Input
                   value={jamInput}
                   onChange={(event) => setJamInput(event.target.value)}
-                  placeholder="Paste Spotify Jam invite: https://open.spotify.com/socialsession/..."
+                  placeholder="Backup only: paste Spotify Jam invite if Android share does not show the app"
                   className="h-12 font-mono text-xs"
                 />
                 <Button onClick={() => saveJamInvite(jamInput)} className="h-12 bg-[#1DB954] text-black hover:bg-[#1DB954]/90">

@@ -19,6 +19,21 @@ import Settings from "@/pages/Settings";
 import Spotify from "@/pages/Spotify";
 
 const queryClient = new QueryClient();
+const JAM_INVITE_PATTERN = /https:\/\/open\.spotify\.com\/socialsession\/[^\s]+/i;
+
+function saveSharedJamInvite() {
+  const params = new URLSearchParams(window.location.search);
+  const sharedText = [params.get("url"), params.get("text"), params.get("title")]
+    .filter(Boolean)
+    .map((value) => value || "")
+    .join(" ");
+  const match = sharedText.match(JAM_INVITE_PATTERN);
+  if (!match) return;
+
+  localStorage.setItem("spotify_jam_invite_url", match[0]);
+  window.dispatchEvent(new Event("spotify-jam-updated"));
+  window.history.replaceState({}, "", `${import.meta.env.BASE_URL}`);
+}
 
 function Router() {
   return (
@@ -40,6 +55,8 @@ function Router() {
 
 function App() {
   useEffect(() => {
+    saveSharedJamInvite();
+
     const orientation = screen.orientation as ScreenOrientation & {
       lock?: (orientation: "landscape-primary") => Promise<void>;
     };

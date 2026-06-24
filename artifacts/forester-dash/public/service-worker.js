@@ -1,4 +1,4 @@
-const CACHE_NAME = "forester-dashboard-v2";
+const CACHE_NAME = "forester-dashboard-v3";
 const BASE_PATH = "/Vehicle-Dashboard/";
 const APP_SHELL = [
   BASE_PATH,

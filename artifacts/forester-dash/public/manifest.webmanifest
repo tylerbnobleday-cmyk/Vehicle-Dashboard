@@ -9,6 +9,16 @@
   "orientation": "landscape-primary",
   "background_color": "#020617",
   "theme_color": "#0f172a",
+  "share_target": {
+    "action": "/Vehicle-Dashboard/?share-target=spotify-jam",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
   "icons": [
     {
       "src": "/Vehicle-Dashboard/icon-192.png",
