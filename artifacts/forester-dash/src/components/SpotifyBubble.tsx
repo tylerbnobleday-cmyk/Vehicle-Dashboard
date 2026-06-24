@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Music2, Pause, Play, RefreshCw, SkipBack, SkipForward } from "lucide-react";
+import { ExternalLink, Loader2, Music2, Pause, Play, QrCode, RefreshCw, SkipBack, SkipForward, Users } from "lucide-react";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,8 @@ interface SpotifyTrack {
   album: { name: string; images: { url: string }[] };
   duration_ms: number;
   id: string;
+  external_urls?: { spotify?: string };
+  uri?: string;
 }
 
 interface PlaybackState {
@@ -70,6 +72,7 @@ export function SpotifyBubble() {
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showJamQr, setShowJamQr] = useState(false);
 
   const isTokenValid = Boolean(accessToken && Date.now() < tokenExpiry - 30000);
   const hasRefreshToken = Boolean(refreshToken || localStorage.getItem("spotify_refresh_token"));
@@ -78,10 +81,13 @@ export function SpotifyBubble() {
   const albumArt = track?.album.images[0]?.url;
   const artistText = track?.artists.map((artist) => artist.name).join(", ") || "";
   const progressPct = Math.min((progress / duration) * 100, 100);
+  const spotifyTrackUrl = track?.external_urls?.spotify || (track?.id ? `https://open.spotify.com/track/${track.id}` : "https://open.spotify.com/");
+  const spotifyAppUrl = track?.uri || "spotify:";
+  const jamQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=${encodeURIComponent(spotifyTrackUrl)}`;
 
   const clampPosition = useCallback((next: { x: number; y: number }) => {
     const width = expanded ? 320 : 64;
-    const height = expanded ? 148 : 64;
+    const height = expanded ? 232 : 64;
     const margin = 12;
     return {
       x: window.innerWidth - width - margin,
@@ -274,6 +280,13 @@ export function SpotifyBubble() {
     setTimeout(fetchPlayback, 250);
   };
 
+  const openJamHelper = () => {
+    window.location.href = spotifyAppUrl;
+    setTimeout(() => {
+      window.open(spotifyTrackUrl, "_blank", "noopener,noreferrer");
+    }, 250);
+  };
+
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
     if (target.closest("button") || target.closest("input")) return;
@@ -316,7 +329,7 @@ export function SpotifyBubble() {
       onPointerUp={onPointerUp}
       className={cn(
         "fixed left-0 top-0 z-[60] select-none touch-none border border-[#1DB954]/45 bg-zinc-950/95 text-white shadow-2xl shadow-black/50 backdrop-blur-xl transition-[width,height,border-radius] duration-200",
-        expanded ? "h-[148px] w-[320px] rounded-2xl p-3" : "h-16 w-16 rounded-full",
+        expanded ? "h-[232px] w-[320px] rounded-2xl p-3" : "h-16 w-16 rounded-full",
         dragging && "transition-none"
       )}
       style={shellStyle}
@@ -396,6 +409,43 @@ export function SpotifyBubble() {
                 >
                   <SkipForward className="h-5 w-5" />
                 </button>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={openJamHelper}
+                    className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg bg-[#1DB954]/15 text-xs font-bold text-[#1DB954] hover:bg-[#1DB954]/25"
+                    aria-label="Open Spotify to start or join a Jam"
+                  >
+                    <Users className="h-4 w-4" /> Add to Jam
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowJamQr((current) => !current)}
+                    className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10"
+                    aria-label="Show Spotify QR code"
+                  >
+                    <QrCode className="h-4 w-4" />
+                  </button>
+                  <a
+                    href={spotifyTrackUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10"
+                    aria-label="Open current track in Spotify"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </div>
+                {showJamQr ? (
+                  <div className="mt-2 flex items-center gap-3">
+                    <img src={jamQrUrl} alt="Spotify track QR code" className="h-16 w-16 rounded-lg bg-white p-1" draggable={false} />
+                    <p className="text-[10px] leading-snug text-zinc-400">
+                      Spotify makes the real Jam invite inside the Spotify app. This QR opens the current song fast.
+                    </p>
+                  </div>
+                ) : null}
               </div>
             </>
           ) : (

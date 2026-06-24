@@ -1,5 +1,6 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
@@ -39,12 +40,22 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => {
+    const orientation = screen.orientation as ScreenOrientation & {
+      lock?: (orientation: OrientationLockType) => Promise<void>;
+    };
+
+    orientation.lock?.("landscape-primary").catch(() => {
+      // Android may reject this outside a fully installed PWA; CSS still keeps the dashboard landscape.
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <AlertSystem />
-          <div className="min-h-[100dvh] bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
+          <div className="landscape-app-shell min-h-[100dvh] bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
             <Router />
             <SpotifyBubble />
             <BottomNav />
