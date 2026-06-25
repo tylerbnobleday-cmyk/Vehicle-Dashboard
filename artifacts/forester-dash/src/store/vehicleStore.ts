@@ -243,7 +243,7 @@ const defaultTyres: TyreRecord[] = [
   },
   {
     id: '2', position: 'FR', brand: 'Unknown', pressure: 33, targetPressure: 33,
-    condition: 'Good', installDate: '', notes: 'Checked about one month ago and confirmed OK.'
+    condition: 'Good', installDate: new Date('2025-10-01').toISOString(), notes: 'Front right tyre confirmed OK. Installed Oct 2025.'
   },
   {
     id: '3', position: 'RL', brand: 'Wanli Harmonic Plus SP026 215/65R16 98V', pressure: 33, targetPressure: 33,
@@ -254,8 +254,8 @@ const defaultTyres: TyreRecord[] = [
     condition: 'Excellent', installDate: new Date('2026-06-23').toISOString(), notes: 'New tyre fitted by JAX Tyres & Auto Caulfield South. Invoice 77598 / work order 061491.'
   },
   {
-    id: '5', position: 'Spare', brand: 'Factory spare in boot', pressure: 33, targetPressure: 33,
-    condition: 'Good', installDate: '', notes: 'Spare tyre confirmed present in the boot/spare wheel well on 23 Jun 2026. Roadworthy with adequate pressure.'
+    id: '5', position: 'Spare', brand: 'Bridgestone 215/65R16', pressure: 33, targetPressure: 33,
+    condition: 'Good', installDate: new Date('2021-03-01').toISOString(), notes: 'Spare tyre confirmed present in the boot/spare wheel well on 23 Jun 2026. Roadworthy with adequate pressure. Installed Mar 2021.'
   },
 ];
 
@@ -553,7 +553,7 @@ export const useVehicleStore = create<VehicleState>()(
       })
     }),
     {
-      name: 'vehicle-storage-v14',
+      name: 'vehicle-storage-v15',
       partialize: (state) => ({
         info: state.info,
         services: state.services,

@@ -52,6 +52,8 @@ function msToTime(ms: number) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+const isJamInviteUrl = (url: string) => /^https:\/\/open\.spotify\.com\/socialsession\/[^/?#]+/i.test(url.trim());
+
 export function SpotifyBubble() {
   const [, setLocation] = useLocation();
   const [expanded, setExpanded] = useState(() => localStorage.getItem("spotify_bubble_expanded") === "true");
@@ -74,6 +76,7 @@ export function SpotifyBubble() {
   const [error, setError] = useState("");
   const [showJamQr, setShowJamQr] = useState(false);
   const [jamInviteUrl, setJamInviteUrl] = useState(() => localStorage.getItem("spotify_jam_invite_url") || "");
+  const [jamCapturePending, setJamCapturePending] = useState(false);
 
   const isTokenValid = Boolean(accessToken && Date.now() < tokenExpiry - 30000);
   const hasRefreshToken = Boolean(refreshToken || localStorage.getItem("spotify_refresh_token"));
@@ -82,7 +85,7 @@ export function SpotifyBubble() {
   const albumArt = track?.album.images[0]?.url;
   const artistText = track?.artists.map((artist) => artist.name).join(", ") || "";
   const progressPct = Math.min((progress / duration) * 100, 100);
-  const jamActive = /^https:\/\/open\.spotify\.com\/socialsession\/[^/?#]+/i.test(jamInviteUrl);
+  const jamActive = isJamInviteUrl(jamInviteUrl);
   const jamQrUrl = jamActive
     ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=${encodeURIComponent(jamInviteUrl)}`
     : "";
@@ -294,21 +297,49 @@ export function SpotifyBubble() {
 
   const saveJamInvite = (url: string) => {
     const trimmed = url.trim();
-    if (!/^https:\/\/open\.spotify\.com\/socialsession\/[^/?#]+/i.test(trimmed)) {
+    if (!isJamInviteUrl(trimmed)) {
       setError("Paste a Spotify Jam invite link");
       return;
     }
     localStorage.setItem("spotify_jam_invite_url", trimmed);
     setJamInviteUrl(trimmed);
     setShowJamQr(true);
+    setJamCapturePending(false);
     setError("");
     window.dispatchEvent(new Event("spotify-jam-updated"));
   };
 
-  const startJam = () => {
+  const readJamFromClipboard = async () => {
+    try {
+      const clip = await navigator.clipboard.readText();
+      if (isJamInviteUrl(clip)) {
+        saveJamInvite(clip);
+        return true;
+      }
+    } catch {
+      return false;
+    }
+    return false;
+  };
+
+  useEffect(() => {
+    if (!jamCapturePending) return;
+    const check = () => {
+      if (document.visibilityState === "visible") void readJamFromClipboard();
+    };
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      window.removeEventListener("focus", check);
+      document.removeEventListener("visibilitychange", check);
+    };
+  }, [jamCapturePending]);
+
+  const startJam = async () => {
+    setJamCapturePending(true);
+    setError("Copy the Spotify Jam invite, then come back here.");
     window.location.href = "spotify:";
-    const pasted = window.prompt("Start a Jam in Spotify, tap Share Invite, then paste the Jam link here:");
-    if (pasted) saveJamInvite(pasted);
+    setTimeout(() => void readJamFromClipboard(), 800);
   };
 
   const shareJam = async () => {

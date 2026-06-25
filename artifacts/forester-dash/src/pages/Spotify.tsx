@@ -101,6 +101,7 @@ export default function Spotify() {
   const [jamInput, setJamInput] = useState(() => localStorage.getItem("spotify_jam_invite_url") || "");
   const [jamParticipantCount, setJamParticipantCount] = useState(() => localStorage.getItem("spotify_jam_participant_count") || "");
   const [jamQrVersion, setJamQrVersion] = useState(0);
+  const [jamCapturePending, setJamCapturePending] = useState(false);
   const [playlistCache, setPlaylistCache] = useState<Record<string, SpotifyPlaylist | null>>(() => {
     try {
       return JSON.parse(localStorage.getItem("spotify_featured_playlists") || "{}");
@@ -267,6 +268,7 @@ export default function Spotify() {
     setJamInviteUrl(trimmed);
     setJamInput(trimmed);
     setError("");
+    setJamCapturePending(false);
     setJamQrVersion((current) => current + 1);
     window.dispatchEvent(new Event("spotify-jam-updated"));
   };
@@ -281,18 +283,37 @@ export default function Spotify() {
     window.dispatchEvent(new Event("spotify-jam-updated"));
   };
 
-  const startJam = async () => {
-    window.location.href = "spotify:";
+  const readJamFromClipboard = useCallback(async () => {
     try {
       const clip = await navigator.clipboard.readText();
       if (isJamInviteUrl(clip)) {
         saveJamInvite(clip);
-        return;
+        return true;
       }
     } catch {
-      // Clipboard can be blocked; the manual paste field remains available.
+      return false;
     }
-    setError("Start the Jam in Spotify, tap Share Invite, then paste the Jam link below.");
+    return false;
+  }, []);
+
+  useEffect(() => {
+    if (!jamCapturePending) return;
+    const check = () => {
+      if (document.visibilityState === "visible") void readJamFromClipboard();
+    };
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      window.removeEventListener("focus", check);
+      document.removeEventListener("visibilitychange", check);
+    };
+  }, [jamCapturePending, readJamFromClipboard]);
+
+  const startJam = async () => {
+    setJamCapturePending(true);
+    setError("Copy the Spotify Jam invite, then come back here. The app will grab it automatically.");
+    window.location.href = "spotify:";
+    setTimeout(() => void readJamFromClipboard(), 800);
   };
 
   const copyJamLink = async () => {
