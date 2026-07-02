@@ -1,6 +1,5 @@
 #include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
-#include <ESPAsyncWebServer.h>
+#include <ESP8266WebServer.h>
 #include <SoftwareSerial.h>
 #include <TinyGPSPlus.h>
 
@@ -22,18 +21,17 @@ const uint8_t GPS_TX_PIN = D5; // ESP transmits to GPS RX, GPIO14
 const uint32_t USB_BAUD = 115200;
 const uint32_t GPS_BAUD = 9600;
 const uint16_t DASH_PUSH_MS = 1000;
+const unsigned int DIGIT_DELAY_US = 1200;
 const float PARKED_IGNORE_KMH = 3.0;
 const float MAX_REASONABLE_JUMP_KM = 0.2;
 const uint32_t LIMIT_STALE_MS = 15000;
 
-AsyncWebServer server(80);
-AsyncWebSocket webSocket("/ws");
+ESP8266WebServer server(80);
 SoftwareSerial gpsSerial(GPS_RX_PIN, GPS_TX_PIN);
 TinyGPSPlus gps;
 
-uint8_t activeDigit = 0;
-uint8_t displayBuffer[8] = {0};
 bool displayEnabled = true;
+int displaySpeedKmh = 0;
 
 float smoothedSpeedKmh = 0.0;
 float rawSpeedKmh = 0.0;
@@ -52,9 +50,9 @@ uint32_t lastDashPushMs = 0;
 uint32_t lastFlashMs = 0;
 bool flashVisible = true;
 
-// PROFILE 8: segment byte is active high, digit select byte is active high.
-// Bits are DP,G,F,E,D,C,B,A for the segment byte.
-const uint8_t SEGMENTS[10] = {
+// Standard 7-seg map: bit0=A, bit1=B, bit2=C, bit3=D, bit4=E, bit5=F, bit6=G, bit7=DP.
+// PROFILE 8 uses the working scanner profile: normal segment map with inverted segment bits.
+const byte SEG_NORMAL[10] = {
   0b00111111, // 0
   0b00000110, // 1
   0b01011011, // 2
@@ -67,43 +65,99 @@ const uint8_t SEGMENTS[10] = {
   0b01101111  // 9
 };
 
-const uint8_t DIGITS[8] = {
-  0b00000001,
-  0b00000010,
-  0b00000100,
-  0b00001000,
-  0b00010000,
-  0b00100000,
-  0b01000000,
-  0b10000000
-};
+byte remapSegments(byte seg, int mapId) {
+  const byte maps[8][8] = {
+    {0, 1, 2, 3, 4, 5, 6, 7},
+    {7, 6, 5, 4, 3, 2, 1, 0},
+    {1, 2, 3, 4, 5, 6, 0, 7},
+    {6, 5, 4, 3, 2, 1, 0, 7},
+    {0, 5, 4, 3, 2, 1, 6, 7},
+    {5, 0, 1, 2, 3, 4, 6, 7},
+    {2, 1, 0, 5, 4, 3, 6, 7},
+    {3, 2, 1, 0, 5, 4, 6, 7}
+  };
 
-void shiftDisplay(uint8_t segments, uint8_t digit) {
+  mapId &= 7;
+  byte out = 0;
+  for (int i = 0; i < 8; i++) {
+    if (seg & (1 << i)) out |= (1 << maps[mapId][i]);
+  }
+  return out;
+}
+
+byte getSeg(byte number) {
+  int segMap = PROFILE & 7;
+  bool invertSegs = PROFILE & 8;
+  byte seg = remapSegments(SEG_NORMAL[number], segMap);
+  return invertSegs ? ~seg : seg;
+}
+
+byte getDigitMask(int pos) {
+  bool reverseDigits = PROFILE & 16;
+  bool invertDigits = PROFILE & 32;
+  int p = reverseDigits ? (7 - pos) : pos;
+  byte digit = (1 << p);
+  return invertDigits ? ~digit : digit;
+}
+
+void sendBytes(byte b1, byte b2) {
+  bool lsbFirst = PROFILE & 128;
+
   digitalWrite(DISPLAY_RCK, LOW);
-  shiftOut(DISPLAY_DIO, DISPLAY_SCK, MSBFIRST, digit);
-  shiftOut(DISPLAY_DIO, DISPLAY_SCK, MSBFIRST, segments);
+  if (lsbFirst) {
+    shiftOut(DISPLAY_DIO, DISPLAY_SCK, LSBFIRST, b1);
+    shiftOut(DISPLAY_DIO, DISPLAY_SCK, LSBFIRST, b2);
+  } else {
+    shiftOut(DISPLAY_DIO, DISPLAY_SCK, MSBFIRST, b1);
+    shiftOut(DISPLAY_DIO, DISPLAY_SCK, MSBFIRST, b2);
+  }
   digitalWrite(DISPLAY_RCK, HIGH);
 }
 
 void clearDisplay() {
-  shiftDisplay(0, 0);
+  sendBytes(0x00, 0x00);
 }
 
-void setDisplaySpeed(int speed) {
-  for (uint8_t i = 0; i < 8; i++) displayBuffer[i] = 0;
+void showOneDigit(int pos, int value) {
+  bool swapBytes = PROFILE & 64;
+  byte seg = getSeg(value);
+  byte digit = getDigitMask(pos);
+  if (swapBytes) {
+    sendBytes(seg, digit);
+  } else {
+    sendBytes(digit, seg);
+  }
+}
 
-  speed = constrain(speed, 0, 999);
-  if (speed == 0) {
-    displayBuffer[7] = SEGMENTS[0];
+void showNumberNoLeadingZeros(int number) {
+  number = constrain(number, 0, 999);
+
+  int hundreds = (number / 100) % 10;
+  int tens = (number / 10) % 10;
+  int ones = number % 10;
+
+  if (number == 0) {
+    showOneDigit(7, 0);
+    delayMicroseconds(DIGIT_DELAY_US);
     return;
   }
 
-  uint8_t position = 7;
-  while (speed > 0 && position < 8) {
-    displayBuffer[position] = SEGMENTS[speed % 10];
-    speed /= 10;
-    if (position == 0) break;
-    position--;
+  if (number >= 100) {
+    showOneDigit(5, hundreds);
+    delayMicroseconds(DIGIT_DELAY_US);
+  }
+  if (number >= 10) {
+    showOneDigit(6, tens);
+    delayMicroseconds(DIGIT_DELAY_US);
+  }
+  showOneDigit(7, ones);
+  delayMicroseconds(DIGIT_DELAY_US);
+}
+
+void showAll8() {
+  for (int i = 0; i < 8; i++) {
+    showOneDigit(i, 8);
+    delayMicroseconds(DIGIT_DELAY_US);
   }
 }
 
@@ -113,8 +167,11 @@ void refreshDisplay() {
     return;
   }
 
-  shiftDisplay(displayBuffer[activeDigit], DIGITS[activeDigit]);
-  activeDigit = (activeDigit + 1) % 8;
+  if (millis() < 3000) {
+    showAll8();
+  } else {
+    showNumberNoLeadingZeros(displaySpeedKmh);
+  }
 }
 
 float distanceKm(float lat1, float lon1, float lat2, float lon2) {
@@ -157,7 +214,6 @@ String dashJson() {
 
 void sendDash() {
   String json = dashJson();
-  webSocket.textAll(json);
   Serial.println(json);
   lastOdoAddKm = 0.0;
 }
@@ -190,21 +246,6 @@ void handleCommand(const String& message) {
   }
 }
 
-void onWebSocketEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* payload, size_t length) {
-  if (type == WS_EVT_DATA) {
-    AwsFrameInfo* info = (AwsFrameInfo*)arg;
-    if (!info->final || info->index != 0 || info->len != length || info->opcode != WS_TEXT) return;
-
-    String message;
-    for (size_t i = 0; i < length; i++) message += (char)payload[i];
-    handleCommand(message);
-  }
-
-  if (type == WS_EVT_CONNECT) {
-    client->text(dashJson());
-  }
-}
-
 void updateGpsState() {
   while (gpsSerial.available()) {
     gps.encode(gpsSerial.read());
@@ -214,7 +255,7 @@ void updateGpsState() {
     rawSpeedKmh = gps.speed.kmph();
     float alpha = smoothingPercent / 100.0;
     smoothedSpeedKmh = (smoothedSpeedKmh * (1.0 - alpha)) + (rawSpeedKmh * alpha);
-    setDisplaySpeed((int)round(smoothedSpeedKmh));
+    displaySpeedKmh = constrain((int)round(smoothedSpeedKmh), 0, 999);
   }
 
   if (gps.location.isUpdated() && gps.location.isValid()) {
@@ -251,8 +292,7 @@ void updateSpeedWarning() {
 }
 
 void handleRoot() {
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->send(200, "text/html",
+  server.send(200, "text/html",
     "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'>"
     "<title>Forester Dash</title><style>body{font-family:sans-serif;background:#101418;color:#f5f5f5;padding:20px}"
     "button{font-size:18px;margin:4px;padding:10px 14px}</style></head><body>"
@@ -260,11 +300,44 @@ void handleRoot() {
     "<button onclick='cmd(\"LIMIT\",40)'>40</button><button onclick='cmd(\"LIMIT\",50)'>50</button>"
     "<button onclick='cmd(\"LIMIT\",60)'>60</button><button onclick='cmd(\"LIMIT\",80)'>80</button>"
     "<button onclick='cmd(\"LIMIT\",100)'>100</button><button onclick='cmd(\"RESETTRIP\")'>Reset Trip</button>"
-    "<script>let ws=new WebSocket('ws://'+location.hostname+'/ws');"
-    "ws.onmessage=e=>out.textContent=JSON.stringify(JSON.parse(e.data),null,2);"
-    "function cmd(c,v){ws.send(JSON.stringify({type:'command',command:c,value:v}))}</script></body></html>"
-    );
-  });
+    "<script>async function poll(){let r=await fetch('/api/dash');out.textContent=JSON.stringify(await r.json(),null,2)}"
+    "setInterval(poll,1000);poll();"
+    "function cmd(c,v){fetch('/api/command?command='+c+(v?'&value='+v:''),{method:'POST'}).then(poll)}</script></body></html>"
+  );
+}
+
+void addCorsHeaders() {
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.sendHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  server.sendHeader("Access-Control-Allow-Headers", "Content-Type");
+}
+
+void handleDashApi() {
+  addCorsHeaders();
+  server.send(200, "application/json", dashJson());
+}
+
+void handleCommandApi() {
+  addCorsHeaders();
+  if (server.method() == HTTP_OPTIONS) {
+    server.send(204);
+    return;
+  }
+
+  String command = server.arg("command");
+  String value = server.arg("value");
+
+  if (command == "LIMIT") {
+    handleCommand("LIMIT=" + value);
+  } else if (command == "MARGIN") {
+    handleCommand("MARGIN=" + value);
+  } else if (command == "SMOOTH") {
+    handleCommand("SMOOTH=" + value);
+  } else if (command == "RESETTRIP" || command == "STATUS") {
+    handleCommand(command);
+  }
+
+  server.send(200, "application/json", dashJson());
 }
 
 void setup() {
@@ -275,14 +348,15 @@ void setup() {
   pinMode(DISPLAY_SCK, OUTPUT);
   pinMode(DISPLAY_RCK, OUTPUT);
   clearDisplay();
-  setDisplaySpeed(0);
+  displaySpeedKmh = 0;
 
   WiFi.mode(WIFI_AP);
   WiFi.softAP(AP_SSID, AP_PASSWORD);
 
-  handleRoot();
-  webSocket.onEvent(onWebSocketEvent);
-  server.addHandler(&webSocket);
+  server.on("/", HTTP_GET, handleRoot);
+  server.on("/api/dash", HTTP_GET, handleDashApi);
+  server.on("/api/command", HTTP_POST, handleCommandApi);
+  server.on("/api/command", HTTP_OPTIONS, handleCommandApi);
   server.begin();
 
   lastLimitUpdateMs = millis();
@@ -296,7 +370,7 @@ void loop() {
   updateGpsState();
   updateSpeedWarning();
   refreshDisplay();
-  webSocket.cleanupClients();
+  server.handleClient();
 
   if (millis() - lastDashPushMs >= DASH_PUSH_MS) {
     lastDashPushMs = millis();

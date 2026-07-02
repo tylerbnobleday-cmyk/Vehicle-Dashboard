@@ -361,7 +361,7 @@ export default function Vehicle() {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Connect the tablet to WiFi network ForesterDash first. GitHub Pages is HTTPS, so Android Chrome may block local ws:// traffic; if blocked, use local HTTP dev mode or the ESP-hosted page at 192.168.4.1.
+            Connect the tablet to WiFi network ForesterDash first. The website reads ESP GPS from http://192.168.4.1/api/dash. GitHub Pages is HTTPS, so some browsers may block local HTTP; if blocked, use local HTTP dev mode or the ESP page at 192.168.4.1.
           </p>
         </CardContent>
       </Card>

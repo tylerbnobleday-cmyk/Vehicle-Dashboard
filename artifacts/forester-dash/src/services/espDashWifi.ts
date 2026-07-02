@@ -27,15 +27,16 @@ export interface EspDashState {
 
 type Listener = (state: EspDashState) => void;
 
-const DEFAULT_WS_URL = "ws://192.168.4.1/ws";
+const DEFAULT_API_URL = "http://192.168.4.1";
 const listeners = new Set<Listener>();
 
-let socket: WebSocket | null = null;
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+let abortController: AbortController | null = null;
 let state: EspDashState = {
   status: "disconnected",
   data: null,
   error: "",
-  url: DEFAULT_WS_URL,
+  url: DEFAULT_API_URL,
 };
 
 function notify() {
@@ -142,12 +143,39 @@ function applyToVehicleApi(data: EspDashData) {
   VehicleApi.updateData(update);
 }
 
+function apiUrl(baseUrl: string, path: string) {
+  return `${baseUrl.replace(/\/$/, "")}${path}`;
+}
+
 function blockedByMixedContent(url: string) {
-  return window.location.protocol === "https:" && url.startsWith("ws://");
+  return window.location.protocol === "https:" && url.startsWith("http://");
+}
+
+async function fetchDash(url: string) {
+  abortController?.abort();
+  abortController = new AbortController();
+
+  const response = await fetch(apiUrl(url, "/api/dash"), {
+    signal: abortController.signal,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`ESP returned HTTP ${response.status}`);
+  }
+
+  const raw = await response.text();
+  const data = parseEspDashJson(raw);
+  if (!data) {
+    throw new Error("ESP sent dashboard data in an unexpected format.");
+  }
+
+  setState({ data, status: "connected", error: "" });
+  applyToVehicleApi(data);
 }
 
 export const EspDashWifi = {
-  defaultUrl: DEFAULT_WS_URL,
+  defaultUrl: DEFAULT_API_URL,
 
   getState: () => state,
 
@@ -157,62 +185,62 @@ export const EspDashWifi = {
     return () => listeners.delete(listener);
   },
 
-  connect: (url = DEFAULT_WS_URL) => {
-    if (!("WebSocket" in window)) {
-      setState({ status: "error", error: "This browser does not support WebSocket connections.", url });
-      return;
-    }
-
+  connect: (url = DEFAULT_API_URL) => {
     if (blockedByMixedContent(url)) {
       setState({
         status: "blocked",
-        error: "GitHub Pages is HTTPS, so this browser may block ws://192.168.4.1. Use local HTTP dev mode or the ESP-hosted page.",
+        error: "GitHub Pages is HTTPS, so this browser may block http://192.168.4.1. Use local HTTP dev mode or the ESP-hosted page.",
         url,
       });
       return;
     }
 
-    socket?.close();
+    EspDashWifi.disconnect();
     setState({ status: "connecting", error: "", url });
-    socket = new WebSocket(url);
 
-    socket.addEventListener("open", () => {
-      setState({ status: "connected", error: "" });
-      EspDashWifi.sendCommand("STATUS");
-    });
-
-    socket.addEventListener("message", (event) => {
-      if (typeof event.data !== "string") return;
-      const data = parseEspDashJson(event.data);
-      if (!data) return;
-      setState({ data, status: "connected", error: "" });
-      applyToVehicleApi(data);
-    });
-
-    socket.addEventListener("error", () => {
-      setState({ status: "error", error: "Could not connect to the ESP WiFi dash." });
-    });
-
-    socket.addEventListener("close", () => {
-      socket = null;
-      setState((state.status === "error" || state.status === "blocked") ? {} : { status: "disconnected" });
-    });
+    void fetchDash(url)
+      .then(() => {
+        pollTimer = setInterval(() => {
+          void fetchDash(url).catch((error) => {
+            setState({ status: "error", error: error instanceof Error ? error.message : "Could not read ESP GPS data." });
+          });
+        }, 1000);
+      })
+      .catch((error) => {
+        setState({ status: "error", error: error instanceof Error ? error.message : "Could not connect to the ESP WiFi dash." });
+      });
   },
 
   disconnect: () => {
-    socket?.close();
-    socket = null;
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+    abortController?.abort();
+    abortController = null;
     setState({ status: "disconnected" });
   },
 
   sendCommand: (command: string, value?: number) => {
-    if (!socket || socket.readyState !== WebSocket.OPEN) return false;
+    if (state.status !== "connected") return false;
 
-    socket.send(JSON.stringify({
-      type: "command",
-      command,
-      ...(value !== undefined ? { value } : {}),
-    }));
+    const params = new URLSearchParams({ command });
+    if (value !== undefined) params.set("value", String(value));
+
+    void fetch(apiUrl(state.url, `/api/command?${params.toString()}`), {
+      method: "POST",
+      cache: "no-store",
+    }).then(async (response) => {
+      if (!response.ok) throw new Error(`ESP returned HTTP ${response.status}`);
+      const data = parseEspDashJson(await response.text());
+      if (data) {
+        setState({ data, status: "connected", error: "" });
+        applyToVehicleApi(data);
+      }
+    }).catch((error) => {
+      setState({ status: "error", error: error instanceof Error ? error.message : "Could not send ESP command." });
+    });
+
     return true;
   },
 };

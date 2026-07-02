@@ -1,6 +1,6 @@
 # Forester WiFi Speedometer Firmware
 
-ESP8266/NodeMCU firmware for the 2010 Subaru Forester dashboard project. The ESP creates its own WiFi network, reads GPS, drives the physical 8-digit 7-segment display, and streams GPS/speed/trip data to the React dashboard over WebSocket.
+ESP8266/NodeMCU firmware for the 2010 Subaru Forester dashboard project. The ESP creates its own WiFi network, reads GPS, drives the physical 8-digit 7-segment display, and exposes GPS/speed/trip data to the React dashboard over a simple HTTP API.
 
 ## Hardware
 
@@ -33,8 +33,8 @@ Install these libraries in Arduino IDE:
 
 - TinyGPSPlus
 - SoftwareSerial
-- ESPAsyncTCP
-- ESPAsyncWebServer
+
+The firmware uses `ESP8266WiFi` and `ESP8266WebServer` from the ESP8266 board package, so you do not need `ESPAsyncTCP` or `ESPAsyncWebServer`.
 
 Board settings:
 
@@ -56,15 +56,22 @@ The ESP creates an access point:
 SSID: ForesterDash
 Password: Forester123
 ESP IP: 192.168.4.1
-WebSocket: ws://192.168.4.1/ws
-Fallback ESP page: http://192.168.4.1
+Dashboard API: http://192.168.4.1/api/dash
+Command API: http://192.168.4.1/api/command
+ESP page: http://192.168.4.1
 ```
 
 Connect the Samsung tablet to `ForesterDash`, then use the Vehicle Dashboard ESP WiFi Dash card.
 
 ## Dashboard Telemetry
 
-The ESP sends JSON every 1 second:
+The React dashboard polls this endpoint every 1 second:
+
+```text
+GET http://192.168.4.1/api/dash
+```
+
+It returns:
 
 ```json
 {
@@ -88,10 +95,10 @@ When connected, the React website uses ESP GPS for the Vehicle page GPS estimate
 
 ## Dashboard Commands
 
-The website sends commands back over WebSocket:
+The website sends commands back with HTTP:
 
-```json
-{ "type": "command", "command": "LIMIT", "value": 60 }
+```text
+POST http://192.168.4.1/api/command?command=LIMIT&value=60
 ```
 
 Supported commands:
@@ -115,7 +122,7 @@ Supported commands:
 ## Known Limitations
 
 - GPS does not know road speed limits by itself. The tablet/dashboard must send `LIMIT` updates.
-- GitHub Pages is HTTPS and may block `ws://192.168.4.1/ws` as mixed content. If blocked, use local HTTP dev mode or the ESP-hosted page at `http://192.168.4.1`.
-- WebSocket access to a local ESP is best on Android Chrome/Samsung Internet. iPhone/Safari is not the target for this setup.
+- GitHub Pages is HTTPS and may block `http://192.168.4.1` as mixed content. If blocked, use local HTTP dev mode or the ESP-hosted page at `http://192.168.4.1`.
+- Local ESP HTTP access is best on Android Chrome/Samsung Internet. iPhone/Safari is not the target for this setup.
 - ESP8266 SoftwareSerial can be fragile. Keep wiring short, stable, and powered properly.
 - This physical GPS speedometer is an assist/display. It does not replace the factory speedometer.
