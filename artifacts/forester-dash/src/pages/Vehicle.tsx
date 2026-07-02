@@ -11,10 +11,13 @@ import {
   ShieldCheck,
   Thermometer,
   TriangleAlert,
+  Wifi,
+  WifiOff,
   Wrench,
 } from "lucide-react";
 import { useVehicleStore, TyreRecord, ServiceRecord, RepairRecord, ReminderRecord } from "@/store/vehicleStore";
 import { VehicleApi } from "@/services/vehicleApi";
+import { EspDashWifi, EspDashState } from "@/services/espDashWifi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -101,6 +104,10 @@ function reminderLabel(reminder: ReminderRecord) {
   return reminder.status;
 }
 
+function formatEspValue(value: number | undefined, suffix = "") {
+  return value === undefined ? "--" : `${value.toFixed(value % 1 === 0 ? 0 : 1)}${suffix}`;
+}
+
 function TyreBadge({ tyre, onEdit }: { tyre: TyreRecord; onEdit: (tyre: TyreRecord) => void }) {
   return (
     <button
@@ -130,10 +137,18 @@ export default function Vehicle() {
 
   const [editingTyre, setEditingTyre] = useState<TyreRecord | null>(null);
   const [time, setTime] = useState(new Date());
+  const [espDash, setEspDash] = useState<EspDashState>(() => EspDashWifi.getState());
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = EspDashWifi.subscribe(setEspDash);
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const overdueServices = services.filter((service) => service.status === "OVERDUE");
@@ -168,6 +183,10 @@ export default function Vehicle() {
             : "No location";
 
   const estimatedKmToAdd = Math.round(sensorData.estimatedDistanceKm);
+  const espData = espDash.data;
+  const espConnected = espDash.status === "connected";
+  const espLastUpdate =
+    espData?.timestamp ? formatDistanceToNowStrict(new Date(espData.timestamp), { addSuffix: true }) : "Never";
 
   const handleApplyEstimatedKm = () => {
     if (estimatedKmToAdd <= 0) return;
@@ -225,6 +244,9 @@ export default function Vehicle() {
             <Gauge className="w-5 h-5 text-green-400 mb-2" />
             <p className="text-xs uppercase tracking-widest text-muted-foreground">GPS Estimate</p>
             <p className="text-2xl font-mono font-bold">{sensorData.estimatedDistanceKm.toFixed(1)} km</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {espConnected ? "Source: ESP GPS" : "Source: car tablet GPS"}
+            </p>
             <button
               type="button"
               onClick={handleApplyEstimatedKm}
@@ -252,6 +274,97 @@ export default function Vehicle() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className={`border ${espData?.overLimit ? "border-red-500/50 bg-red-500/10" : "border-border/50 bg-card/40"} backdrop-blur`}>
+        <CardHeader className="pb-3 border-b border-border/20">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-sm uppercase tracking-widest text-muted-foreground">
+            <span className="flex items-center gap-2">
+              {espConnected ? <Wifi className="h-4 w-4 text-green-400" /> : <WifiOff className="h-4 w-4 text-muted-foreground" />}
+              ESP WiFi Dash
+            </span>
+            <span className={`rounded-md border px-2 py-1 text-xs font-bold ${
+              espDash.status === "connected"
+                ? "border-green-500/40 bg-green-500/10 text-green-300"
+                : espDash.status === "blocked" || espDash.status === "error"
+                  ? "border-red-500/40 bg-red-500/10 text-red-300"
+                  : "border-border/50 bg-background/50 text-muted-foreground"
+            }`}>
+              {espDash.status}
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-4">
+          {(espDash.status === "blocked" || espDash.status === "error") && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+              {espDash.error}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Speed</p>
+              <p className="font-mono text-2xl font-black">{formatEspValue(espData?.speedKmh)}</p>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Limit</p>
+              <p className="font-mono text-2xl font-black">{formatEspValue(espData?.speedLimitKmh)}</p>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Trip</p>
+              <p className="font-mono text-2xl font-black">{formatEspValue(espData?.tripKm, " km")}</p>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">GPS Fix</p>
+              <p className="text-lg font-bold">{espData?.fix === undefined ? "--" : espData.fix ? "Yes" : "No"}</p>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Satellites</p>
+              <p className="font-mono text-2xl font-black">{formatEspValue(espData?.satellites)}</p>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Heading</p>
+              <p className="font-mono text-2xl font-black">{formatEspValue(espData?.headingDeg, " deg")}</p>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Warning</p>
+              <p className={`text-lg font-bold ${espData?.overLimit ? "text-red-300" : "text-green-300"}`}>
+                {espData?.overLimit ? "Over" : "OK"}
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Updated</p>
+              <p className="text-sm font-semibold">{espLastUpdate}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => EspDashWifi.connect()} disabled={espDash.status === "connecting" || espConnected}>
+              Connect WiFi Dash
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => EspDashWifi.disconnect()} disabled={!espConnected}>
+              Disconnect
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => EspDashWifi.sendCommand("RESETTRIP")} disabled={!espConnected}>
+              Reset Trip
+            </Button>
+            {[40, 50, 60, 80, 100].map((limit) => (
+              <Button
+                key={limit}
+                size="sm"
+                variant="secondary"
+                onClick={() => EspDashWifi.sendCommand("LIMIT", limit)}
+                disabled={!espConnected}
+              >
+                LIMIT {limit}
+              </Button>
+            ))}
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Connect the tablet to WiFi network ForesterDash first. GitHub Pages is HTTPS, so Android Chrome may block local ws:// traffic; if blocked, use local HTTP dev mode or the ESP-hosted page at 192.168.4.1.
+          </p>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className={`border ${health.bgColor} backdrop-blur`}>
